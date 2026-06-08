@@ -5,6 +5,8 @@
 secrets/
 *.json
 !data/**/*.json
+!results/run_manifest.json
+!results/hardware_snapshot.json
 venv/
 .venv/
 env/
