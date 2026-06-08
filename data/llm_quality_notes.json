@@ -1,0 +1,37 @@
+{
+  "_doc": "Evaluación cualitativa revisando results/raw/llm_*.json (run_id 1 por prompt). Escala 1–5.",
+  "evaluador": "Asistente IA (revisión de outputs; confirmar matices antes del PDF)",
+  "fecha": "2026-06-08",
+  "providers": [
+    {
+      "provider": "openai",
+      "coherencia_1_5": 5,
+      "instrucciones_1_5": 4,
+      "nota": "Respuestas claras en español; p2 razona por combinaciones; p3 JSON con clave agentes; p4 resume las 6 dimensiones; p5 cumple rol Max con calentamiento. Población AMCR varía entre corridas."
+    },
+    {
+      "provider": "anthropic",
+      "coherencia_1_5": 5,
+      "instrucciones_1_5": 3,
+      "nota": "Contenido sólido pero añade markdown/emojis en p1–p5 cuando se pidió texto plano o JSON exclusivo; p3 sí entrega JSON válido. Excelente estructura en p2."
+    },
+    {
+      "provider": "google",
+      "coherencia_1_5": 4,
+      "instrucciones_1_5": 4,
+      "nota": "Buen español y resúmenes útiles; p3 JSON 100% válido en corrida 2026-06-08; p4 condensa bien el texto largo."
+    },
+    {
+      "provider": "groq",
+      "coherencia_1_5": 4,
+      "instrucciones_1_5": 3,
+      "nota": "Rápido y coherente; p4 muy breve (cubre 3 bloques pero poco detalle); p3 a veces devuelve array sin envoltorio agentes; p5 ofrece rutina de calentamiento."
+    },
+    {
+      "provider": "ollama",
+      "coherencia_1_5": 3,
+      "instrucciones_1_5": 3,
+      "nota": "Llama 3.2 3B local: p1 excede una oración; p3 JSON válido pero con personajes fuera de contexto (Batman/Sonic); p2 y p4 razonables para tamaño del modelo."
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "_doc": "Catálogo STT. synthetic_piper: scripts/generate_stt_audio_piper.py. fleurs_human: scripts/download_common_voice_samples.py (FLEURS es_419).",
+  "samples": [
+    {
+      "id": "a1_saludo_corto",
+      "file": "a1_saludo_corto.wav",
+      "language": "es-CR",
+      "source": "synthetic_piper",
+      "reference_text": "Hola, buenos días. Soy un agente virtual de prueba para el benchmarking."
+    },
+    {
+      "id": "a2_oracion_media",
+      "file": "a2_oracion_media.wav",
+      "language": "es-CR",
+      "source": "synthetic_piper",
+      "reference_text": "El benchmarking sistemático de servicios cognitivos contempla seis dimensiones interdependientes que incluyen latencia, precisión, costo, privacidad, customización y facilidad de integración."
+    },
+    {
+      "id": "a3_numeros_y_terminos",
+      "file": "a3_numeros_y_terminos.wav",
+      "language": "es-CR",
+      "source": "synthetic_piper",
+      "reference_text": "El modelo cuenta con treinta y dos mil polígonos, sesenta y tres blendshapes y soporta lip-sync por análisis FFT de quinientos doce puntos."
+    },
+    {
+      "id": "a4_parrafo_tecnico",
+      "file": "a4_parrafo_tecnico.wav",
+      "language": "es-CR",
+      "source": "synthetic_piper",
+      "reference_text": "La evaluación comparativa de modelos de lenguaje, reconocimiento de voz y síntesis de voz requiere prompts controlados, audios estandarizados y mediciones repetidas para reducir la varianza inducida por la red y por el calentamiento de caches del proveedor."
+    },
+    {
+      "id": "a5_acentos_cr",
+      "file": "a5_acentos_cr.wav",
+      "language": "es-CR",
+      "source": "synthetic_piper",
+      "reference_text": "Mae, qué tuanis lo que hizo el agente virtual hoy. La verdad sí jaló pura vida con el lip-sync."
+    },
+    {
+      "id": "g1_fleurs",
+      "file": "g1_fleurs.wav",
+      "language": "Spanish",
+      "source": "fleurs_human",
+      "reference_text": "los murales o garabatos indeseados reciben el nombre de grafiti",
+      "duration_sec": 5.76,
+      "fleurs_id": 844,
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+    },
+    {
+      "id": "g2_fleurs",
+      "file": "g2_fleurs.wav",
+      "language": "Spanish",
+      "source": "fleurs_human",
+      "reference_text": "por el momento no se sabe qué cargos se imputarán o qué condujo a las autoridades hasta el niño pero se ha dado inicio a procedimientos penales de menores en el tribunal federal",
+      "duration_sec": 12.06,
+      "fleurs_id": 91,
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+    },
+    {
+      "id": "g3_fleurs",
+      "file": "g3_fleurs.wav",
+      "language": "Spanish",
+      "source": "fleurs_human",
+      "reference_text": "si deseas aprender cómo lanzar un búmeran y que vuelva a su mano asegúrate de contar con uno que sea adecuado para el regreso",
+      "duration_sec": 9.66,
+      "fleurs_id": 848,
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+    },
+    {
+      "id": "g4_fleurs",
+      "file": "g4_fleurs.wav",
+      "language": "Spanish",
+      "source": "fleurs_human",
+      "reference_text": "a veces un mismo vuelo puede costar precios muy diferentes en varios recopiladores de contenidos por lo que vale la pena comparar los resultados de búsqueda y navegar en el sitio web de la empresa antes de realizar la reserva",
+      "duration_sec": 15.66,
+      "fleurs_id": 930,
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+    },
+    {
+      "id": "g5_fleurs",
+      "file": "g5_fleurs.wav",
+      "language": "Spanish",
+      "source": "fleurs_human",
+      "reference_text": "las autoridades hicieron pocas declaraciones oficiales aparte de confirmar el arresto de hoy",
+      "duration_sec": 6.36,
+      "fleurs_id": 89,
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+    }
+  ]
+}

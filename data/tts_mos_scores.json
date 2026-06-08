@@ -1,0 +1,42 @@
+{
+  "_doc": "Inteligibilidad: MOS derivado de WER round-trip (STT sobre TTS). Naturalidad: estimación comparativa — validar escuchando t2_oracion_media_run1 por proveedor.",
+  "evaluador": "Auto (WER) + naturalidad conservada si existía",
+  "fecha": "2026-06-08",
+  "providers": [
+    {
+      "provider": "azure",
+      "mos_inteligibilidad": 3,
+      "mos_naturalidad": 4,
+      "wer_promedio": 0.1849,
+      "nota": "Voz es-CR clara; t1 con WER alto por saludo informal transcrito distinto."
+    },
+    {
+      "provider": "elevenlabs",
+      "mos_inteligibilidad": 3,
+      "mos_naturalidad": 5,
+      "wer_promedio": 0.1329,
+      "nota": "Mejor naturalidad esperada; WER casi cero en t2/t3."
+    },
+    {
+      "provider": "google",
+      "mos_inteligibilidad": 3,
+      "mos_naturalidad": 4,
+      "wer_promedio": 0.199,
+      "nota": "Ligera pérdida en t2; neural estable en párrafo largo."
+    },
+    {
+      "provider": "openai",
+      "mos_inteligibilidad": 3,
+      "mos_naturalidad": 4,
+      "wer_promedio": 0.1364,
+      "nota": "Buena inteligibilidad en textos medios/largos."
+    },
+    {
+      "provider": "piper",
+      "mos_inteligibilidad": 3,
+      "mos_naturalidad": 3,
+      "wer_promedio": 0.1988,
+      "nota": "Local gratuito; timbre más sintético que nube."
+    }
+  ]
+}

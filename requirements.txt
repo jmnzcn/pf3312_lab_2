@@ -1,0 +1,41 @@
+# Core
+python-dotenv>=1.0.1
+# Análisis y reporte
+pandas>=2.2.0
+matplotlib>=3.8.0
+jiwer>=3.0.4
+tabulate>=0.9.0
+
+# === LLM providers ===
+openai>=1.40.0
+anthropic>=0.34.0
+google-genai>=0.3.0
+groq>=0.11.0
+ollama>=0.3.3
+
+# === STT providers ===
+deepgram-sdk>=3.7.0
+assemblyai>=0.32.0
+azure-cognitiveservices-speech>=1.40.0
+faster-whisper>=1.0.3
+
+# === TTS providers ===
+elevenlabs>=1.8.0
+google-cloud-texttospeech>=2.16.3
+piper-tts>=1.2.0; platform_system != "Windows"
+# Nota Windows: piper-tts oficial no publica wheels para Windows.
+# Instalar manualmente con el binario de piper desde:
+# https://github.com/rhasspy/piper/releases (ver README sección STT/TTS local)
+
+# Utilidades de audio
+soundfile>=0.12.1
+numpy>=1.26.0
+
+# Descarga de audios humanos (Common Voice, streaming)
+datasets>=2.19.0
+
+# Hardware snapshot (RAM/GPU)
+psutil>=6.0.0
+
+# Tests (opcional)
+pytest>=8.0.0

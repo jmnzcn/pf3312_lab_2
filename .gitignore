@@ -1,0 +1,58 @@
+# Secretos y entornos
+.env
+.env.*
+!.env.example
+secrets/
+*.json
+!data/**/*.json
+venv/
+.venv/
+env/
+.python-version
+
+# Resultados crudos del benchmark (regenerables, pueden ser pesados)
+results/raw/
+results/cache/
+
+# Modelos locales descargados
+models/
+*.onnx
+*.bin
+*.gguf
+
+# Audio de prueba (si son archivos pesados; los pequeños sí se versionan)
+data/test_audio/*.wav
+data/test_audio/*.mp3
+data/test_audio/*.flac
+data/test_audio/*.ogg
+!data/test_audio/README.md
+!data/test_audio/.gitkeep
+
+# Outputs de TTS (los regeneramos al correr)
+results/tts_outputs/
+results/archive/
+results/*.log
+
+# Piper binario y datos espeak (descargar localmente; ver README)
+tools/piper/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

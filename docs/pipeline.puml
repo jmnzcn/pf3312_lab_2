@@ -1,0 +1,46 @@
+@startuml
+title Pipeline de Comunicación · Agente Virtual Inteligente
+
+actor "Usuario" as User
+participant "Unity Client" as Unity
+participant "Captura de Audio\n(micrófono)" as Mic
+participant "STT Service\n(local / cloud)" as STT
+participant "LLM Service\n(local / cloud)" as LLM
+participant "TTS Service\n(local / cloud)" as TTS
+participant "Reproductor\n(Unity AudioSource)" as Speaker
+
+User -> Mic : habla
+Mic -> Unity : audio PCM
+Unity -> STT : POST audio (REST / WebSocket)
+STT --> Unity : texto transcrito (UTF-8) + WER esperado
+Unity -> LLM : prompt + contexto + system prompt
+note right of LLM
+  Streaming token a token
+  TTFT crítico para UX
+end note
+LLM --> Unity : tokens (stream) + usage
+Unity -> Unity : agrega tokens y arma respuesta final
+Unity -> TTS : texto a sintetizar (REST / WebSocket / gRPC)
+TTS --> Unity : audio MP3/PCM (stream)
+Unity -> Speaker : reproducir audio + sincronizar lip-sync
+Speaker --> User : voz del agente
+
+note over Unity, LLM
+  En modo local el LLM corre vía Ollama
+  (HTTP a localhost:11434). En modo cloud
+  se usa OpenAI/Anthropic/Gemini/Groq.
+end note
+
+note over STT
+  Modelos evaluados: whisper-1, Nova-3,
+  AssemblyAI Best, Azure Standard,
+  faster-whisper large-v3 (int8_float16)
+end note
+
+note over TTS
+  Modelos evaluados: gpt-4o-mini-tts,
+  eleven_multilingual_v2, Azure Neural,
+  Google Neural2, Piper local
+end note
+
+@enduml
