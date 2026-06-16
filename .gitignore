@@ -72,6 +72,7 @@ data/llm_quality_notas.json
 data/tts_mos_notas.json
 scripts/export_pdf.py
 scripts/export_docx.py
+scripts/informe_scrub.py
 entrega/
 docs/_informe_export.md
 docs/_informe_export_docx.md
