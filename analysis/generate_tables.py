@@ -1,4 +1,4 @@
-"""Genera tablas comparativas por categoría (última corrida filtrada)."""
+"""Tablas LLM/STT/TTS de la última corrida."""
 
 from __future__ import annotations
 
@@ -13,35 +13,41 @@ from tabulate import tabulate
 
 
 from analysis.aggregate import aggregate_category, analysis_meta_line, load_category_df
+from common.benchmark_config import runs_per_input
+from common.paths import docs_dir, project_root
+
+PROJECT_ROOT = project_root()
+OUT_DIR = docs_dir() / "tablas_generadas"
 
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-OUT_DIR = PROJECT_ROOT / "docs" / "tablas_generadas"
 
 
-
+_DISPLAY_COLS = {
+    "provider": "Proveedor",
+    "model": "Modelo",
+    "deployment": "Despliegue",
+    "llamadas": "N",
+    "latencia_ms_prom": "Lat. prom.",
+    "latencia_ms_std": "Lat. σ",
+    "latencia_ms_p95": "Lat. p95",
+    "ttft_ms_prom": "TTFT",
+    "costo_usd_prom": "USD/llam.",
+    "calidad_prom": "WER",
+    "categoria": "Cat.",
+}
 
 
 def _format_table(df):
-
     out = df.copy()
-
     if "costo_usd_prom" in out.columns:
-
         out["costo_usd_prom"] = out["costo_usd_prom"].map(
-
             lambda x: f"{x:.6f}" if x == x else ""
-
         )
-
     for col in ("latencia_ms_prom", "latencia_ms_std", "latencia_ms_p95", "ttft_ms_prom", "calidad_prom"):
-
         if col in out.columns:
-
             out[col] = out[col].round(2)
-
+    out = out.rename(columns={k: v for k, v in _DISPLAY_COLS.items() if k in out.columns})
     return out
 
 
@@ -74,7 +80,15 @@ def main() -> None:
 
         body = tabulate(_format_table(agg), headers="keys", tablefmt="github", showindex=False)
 
-        content = f"# Resumen comparativo - {category.upper()}\n\n{meta}\n\n{body}\n"
+        content = (
+            f"# Resumen comparativo - {category.upper()}\n\n{meta}\n\n"
+            f"*Promedio de {runs_per_input()} corridas por input (solo llamadas exitosas). "
+            f"N = total agregado"
+            f"{'; WER solo en STT' if category == 'stt' else ''}"
+            f"{'; TTFT solo en LLM' if category == 'llm' else ''}. "
+            f"Gráficos y comentarios de esta capa van después.*\n\n"
+            f"{body}\n"
+        )
 
         out_md.write_text(content, encoding="utf-8")
 

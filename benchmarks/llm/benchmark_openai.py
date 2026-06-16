@@ -1,8 +1,4 @@
-"""Benchmark OpenAI GPT-4o vía API.
-
-Mide TTFT (tiempo al primer token) y latencia total con streaming.
-Precios verificar en: https://openai.com/api/pricing/
-"""
+"""OpenAI GPT-4o con streaming (mide TTFT y latencia total)."""
 from __future__ import annotations
 
 import os
@@ -12,6 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from common.base import Benchmark, BenchmarkResult, llm_output_fields
+from common.benchmark_errors import mark_empty_llm
 from common.metrics import elapsed_ms, estimate_llm_cost_usd
 from common.prompts import LLM_PROMPTS, PromptSpec
 
@@ -20,8 +17,13 @@ load_dotenv()
 
 
 # Verificar tasas vigentes antes de correr el benchmark final.
-INPUT_RATE_PER_MILLION = 2.50  # USD/M input tokens (gpt-4o)
-OUTPUT_RATE_PER_MILLION = 10.00  # USD/M output tokens (gpt-4o)
+from common.rates import (
+    OPENAI_GPT4O_INPUT_PER_M,
+    OPENAI_GPT4O_OUTPUT_PER_M,
+)
+
+INPUT_RATE_PER_MILLION = OPENAI_GPT4O_INPUT_PER_M
+OUTPUT_RATE_PER_MILLION = OPENAI_GPT4O_OUTPUT_PER_M
 
 
 class OpenAIBenchmark(Benchmark):
@@ -70,7 +72,7 @@ class OpenAIBenchmark(Benchmark):
             OUTPUT_RATE_PER_MILLION,
         )
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -86,6 +88,7 @@ class OpenAIBenchmark(Benchmark):
             cost_usd=cost,
             **llm_output_fields(output),
         )
+        return mark_empty_llm(result, output)
 
 
 if __name__ == "__main__":

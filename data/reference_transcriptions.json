@@ -1,40 +1,37 @@
 {
-  "_doc": "Catálogo STT. synthetic_piper: scripts/generate_stt_audio_piper.py. fleurs_human: scripts/download_common_voice_samples.py (FLEURS es_419).",
+  "_doc": "Catálogo STT (14 inputs activos). synthetic_piper: scripts/generate_stt_audio_piper.py. fleurs_human: scripts/download_common_voice_samples.py. common_voice_noisy: scripts/download_common_voice_noisy.py. common_voice_central_america: scripts/download_cv_centroamerica_samples.py. largos (l*): scripts/download_long_stt_samples.py.",
   "samples": [
     {
       "id": "a1_saludo_corto",
       "file": "a1_saludo_corto.wav",
       "language": "es-CR",
       "source": "synthetic_piper",
-      "reference_text": "Hola, buenos días. Soy un agente virtual de prueba para el benchmarking."
+      "reference_text": "Hola, buenos días. Soy el asistente de voz del tutor del curso.",
+      "sha256": "93aa89018f37e2c82c93772ea8e3b1eaf5f8c241de26b0430b896e5d2e5cdbac"
     },
     {
       "id": "a2_oracion_media",
       "file": "a2_oracion_media.wav",
       "language": "es-CR",
       "source": "synthetic_piper",
-      "reference_text": "El benchmarking sistemático de servicios cognitivos contempla seis dimensiones interdependientes que incluyen latencia, precisión, costo, privacidad, customización y facilidad de integración."
-    },
-    {
-      "id": "a3_numeros_y_terminos",
-      "file": "a3_numeros_y_terminos.wav",
-      "language": "es-CR",
-      "source": "synthetic_piper",
-      "reference_text": "El modelo cuenta con treinta y dos mil polígonos, sesenta y tres blendshapes y soporta lip-sync por análisis FFT de quinientos doce puntos."
+      "reference_text": "Hoy probamos cómo cada motor de voz entiende una frase media con el micrófono a un metro de distancia.",
+      "sha256": "adcdc9feda5816404f4711697a187b8f2cb9d460e4d308cdec2cc0fba0407ca2"
     },
     {
       "id": "a4_parrafo_tecnico",
       "file": "a4_parrafo_tecnico.wav",
       "language": "es-CR",
       "source": "synthetic_piper",
-      "reference_text": "La evaluación comparativa de modelos de lenguaje, reconocimiento de voz y síntesis de voz requiere prompts controlados, audios estandarizados y mediciones repetidas para reducir la varianza inducida por la red y por el calentamiento de caches del proveedor."
+      "reference_text": "El sistema graba a dieciséis kilohertz, manda el audio al servicio de transcripción y muestra el texto en pantalla antes de pasarlo al modelo de lenguaje.",
+      "sha256": "ebbf227a6e11bc62db5fd3f2c817bf86f3f29df2969998990ef4b4f7fcf53539"
     },
     {
       "id": "a5_acentos_cr",
       "file": "a5_acentos_cr.wav",
       "language": "es-CR",
       "source": "synthetic_piper",
-      "reference_text": "Mae, qué tuanis lo que hizo el agente virtual hoy. La verdad sí jaló pura vida con el lip-sync."
+      "reference_text": "Mae, qué tuanis lo que hizo el agente virtual hoy. La verdad sí jaló pura vida con la transcripción en tiempo real.",
+      "sha256": "7a0556566cb9970b537a3ecd1ec99cee8c42b79b2c60e673ae43a83ead0673f7"
     },
     {
       "id": "g1_fleurs",
@@ -44,7 +41,8 @@
       "reference_text": "los murales o garabatos indeseados reciben el nombre de grafiti",
       "duration_sec": 5.76,
       "fleurs_id": 844,
-      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador.",
+      "sha256": "746945a371721007e93c80caa6c2a0d08b474831b667510367d7caeb819becfa"
     },
     {
       "id": "g2_fleurs",
@@ -54,17 +52,8 @@
       "reference_text": "por el momento no se sabe qué cargos se imputarán o qué condujo a las autoridades hasta el niño pero se ha dado inicio a procedimientos penales de menores en el tribunal federal",
       "duration_sec": 12.06,
       "fleurs_id": 91,
-      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
-    },
-    {
-      "id": "g3_fleurs",
-      "file": "g3_fleurs.wav",
-      "language": "Spanish",
-      "source": "fleurs_human",
-      "reference_text": "si deseas aprender cómo lanzar un búmeran y que vuelva a su mano asegúrate de contar con uno que sea adecuado para el regreso",
-      "duration_sec": 9.66,
-      "fleurs_id": 848,
-      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador.",
+      "sha256": "269bcf64d3d84b8deaf746ba27942b366a904ae980a7a9dc9acdfe0dafabc313"
     },
     {
       "id": "g4_fleurs",
@@ -74,17 +63,112 @@
       "reference_text": "a veces un mismo vuelo puede costar precios muy diferentes en varios recopiladores de contenidos por lo que vale la pena comparar los resultados de búsqueda y navegar en el sitio web de la empresa antes de realizar la reserva",
       "duration_sec": 15.66,
       "fleurs_id": 930,
-      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador.",
+      "sha256": "efd163420b63cf8352f00e7feaeba72675ec9b95bbef8607802c1c82112797a1"
     },
     {
-      "id": "g5_fleurs",
-      "file": "g5_fleurs.wav",
+      "id": "c1_cv_noisy",
+      "file": "c1_cv_noisy.wav",
+      "language": "es",
+      "source": "common_voice_noisy",
+      "reference_text": "Por un lado, en el sector culto encontramos un movimiento progresivamente creciente.",
+      "duration_sec": 8.35,
+      "common_voice_sentence_id": "1a8c1c13843e1d1431e053f68eb924acc2541e47ef02688762d255fec03e99a7",
+      "up_votes": 2,
+      "down_votes": 0,
+      "snr_db_est": 5.0,
+      "accents": null,
+      "notes": "Common Voice 23.0 (es), espejo HF bookbot/common_voice_23_0_es. Seleccionado por SNR estimado ≈5.0 dB y duración 8.35s (ruido de fondo audible). CC0.",
+      "sha256": "3bf359082c10b43c957faef8a48a82c1043ac4e7dad7247d91f317076df169f0"
+    },
+    {
+      "id": "c3_cv_noisy",
+      "file": "c3_cv_noisy.wav",
+      "language": "es",
+      "source": "common_voice_noisy",
+      "reference_text": "Generalmente se celebra el tercer sábado del mes de septiembre.",
+      "duration_sec": 15.65,
+      "common_voice_sentence_id": "0b08f3b2a1d7120716f293558e16c543da5bb89cd3f9049c20063924ae57c7a5",
+      "up_votes": 2,
+      "down_votes": 0,
+      "snr_db_est": 15.9,
+      "accents": "Caribe: Cuba, Venezuela, Puerto Rico, República Dominicana, Panamá, Colombia caribeña, México caribeño, Costa del golfo de México",
+      "notes": "Common Voice 23.0 (es), espejo HF bookbot/common_voice_23_0_es. Seleccionado por SNR estimado ≈15.9 dB y duración 15.65s (ruido de fondo audible). CC0.",
+      "sha256": "24962e6cebe3467592bf4bc5563a99a005cd8f2e89322e3339955467bc6a4d55"
+    },
+    {
+      "id": "r1_cv_centroamerica",
+      "file": "r1_cv_centroamerica.wav",
+      "reference_text": "Situado en la provincia de Guadalajara, en la comarca del Señorío de Molina-Alto Tajo.",
+      "duration_sec": 10.7,
+      "notes": "Common Voice 23.0 (es), acento autodeclarado América central (proxy centroamericano / es-CR; SNR≈54.3 dB). No sustituye grabación costarricense del investigador. CC0.",
+      "language": "es",
+      "source": "common_voice_central_america",
+      "accents": "América central",
+      "common_voice_sentence_id": "27b1646228340da8e2902f4a58dc2450063586ba7f177b3b55780d91bfe83387",
+      "up_votes": 2,
+      "down_votes": 0,
+      "snr_db_est": 54.3,
+      "sha256": "8006d9fe8f54dc9b1ce23ce231b9f68e0cb9f116a15bcc0a78812503ca52bbf8"
+    },
+    {
+      "id": "r2_cv_centroamerica_largo",
+      "file": "r2_cv_centroamerica_largo.wav",
+      "reference_text": "Situado en la provincia de Guadalajara, en la comarca del Señorío de Molina-Alto Tajo. Sin embargo, la investigación paleontológica para buscar conexiones evolutivas tiene ciertas limitaciones. La Real Academia Española define orientador como \"que orienta\".",
+      "duration_sec": 32.36,
+      "notes": "Concatenación de 3 clips CV América central (pausa 0.35s). Proxy de voz humana centroamericana larga (~32s); CV no publica frases únicas >11s en este acento. CC0.",
+      "language": "es",
+      "source": "common_voice_central_america",
+      "accents": "América central",
+      "common_voice_sentence_ids": [
+        "27b1646228340da8e2902f4a58dc2450063586ba7f177b3b55780d91bfe83387",
+        "16c62debcc353f1cc7a7069a294f134b6a2049a44021907655baf98e8264c688",
+        "169872fcd66ac0c348336e4032a6e240cdcdb09147bf91c51df2fdfd8f155cc9"
+      ],
+      "parts_count": 3,
+      "snr_db_est_avg": 93.1,
+      "sha256": "965662d4b40e677b385c2e8e5160ae4219e206610b15f811b011cf1c0d70eb4d"
+    },
+    {
+      "id": "l1_fleurs_largo",
+      "file": "l1_fleurs_largo.wav",
       "language": "Spanish",
-      "source": "fleurs_human",
-      "reference_text": "las autoridades hicieron pocas declaraciones oficiales aparte de confirmar el arresto de hoy",
-      "duration_sec": 6.36,
-      "fleurs_id": 89,
-      "notes": "Clip de Google FLEURS (es_419, train). Voz humana leída con transcripción verificada (CC BY 4.0). No es grabación del investigador."
+      "source": "fleurs_human_concat",
+      "reference_text": "por el momento no se sabe qué cargos se imputarán o qué condujo a las autoridades hasta el niño pero se ha dado inicio a procedimientos penales de menores en el tribunal federal a veces un mismo vuelo puede costar precios muy diferentes en varios recopiladores de contenidos por lo que vale la pena comparar los resultados de búsqueda y navegar en el sitio web de la empresa antes de realizar la reserva",
+      "duration_sec": 28.07,
+      "notes": "Concatenación de g2+g4 (FLEURS es_419) con pausa de 0,35 s. Voz humana leída; cubre turno largo (~30–40 s) no disponible como frase única en FLEURS. CC BY 4.0.",
+      "fleurs_ids": [
+        91,
+        930
+      ],
+      "parts": [
+        "g2_fleurs",
+        "g4_fleurs"
+      ],
+      "sha256": "79b6a7b4fa2bcdceb391e3c7f4cd396d70efbcb09957cd472abfd7c27906a854"
+    },
+    {
+      "id": "l2_piper_largo",
+      "file": "l2_piper_largo.wav",
+      "language": "es-CR",
+      "source": "synthetic_piper_long",
+      "reference_text": "El tutor de voz del laboratorio escucha al estudiante por el micrófono del laptop, muestra en pantalla lo que entendió y responde con audio generado. Si la red falla, la aplicación puede cambiar a un modo local que tarda más pero no envía datos afuera. En las pruebas del curso se midió el tiempo de cada paso por separado y también el turno completo, porque sumar latencias aisladas no siempre coincide con lo que siente el usuario en la sala. Por eso en el protocolo de benchmark también se registró el costo por clase de quince minutos y se comparó el error de transcripción entre grabaciones de sala y archivos sintéticos.",
+      "duration_sec": 35.17,
+      "notes": "Monólogo sintético Piper (es_ES-davefx-medium) para probar STT en párrafos de ~35–45 s. Misma limitación de sesgo que a1–a5.",
+      "sha256": "b085427733d88e8e6e4f93c576f5763a8f14a9a0555e91e84dbf8ddc23886bed"
+    },
+    {
+      "id": "l4_noisy_largo",
+      "file": "l4_noisy_largo.wav",
+      "language": "Spanish",
+      "source": "synthetic_noisy_long",
+      "reference_text": "por el momento no se sabe qué cargos se imputarán o qué condujo a las autoridades hasta el niño pero se ha dado inicio a procedimientos penales de menores en el tribunal federal a veces un mismo vuelo puede costar precios muy diferentes en varios recopiladores de contenidos por lo que vale la pena comparar los resultados de búsqueda y navegar en el sitio web de la empresa antes de realizar la reserva",
+      "duration_sec": 28.07,
+      "notes": "Mezcla sintética sobre l1_fleurs_largo: ruido rosa a SNR objetivo 14 dB (semilla 42). Complementa CV noisy en turnos largos.",
+      "snr_db_target": 14.0,
+      "base_id": "l1_fleurs_largo",
+      "noise_type": "pink",
+      "sha256": "1eb0d564d198bc18fbfc859d7be70a540d6813d8dae005cb32635fb770b2ec66"
     }
   ]
 }

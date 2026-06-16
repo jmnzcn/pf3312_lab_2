@@ -1,7 +1,4 @@
-"""Benchmark Deepgram Nova-3 (modelo más reciente al 2026).
-
-SDK: deepgram-sdk >= 6.0 (API rediseñada respecto a 3.x/5.x).
-"""
+"""Deepgram Nova-3 (SDK deepgram-sdk >= 6)."""
 from __future__ import annotations
 
 import os
@@ -11,13 +8,16 @@ from deepgram import DeepgramClient
 from dotenv import load_dotenv
 
 from common.audio_samples import AudioSample, load_audio_samples
-from common.base import Benchmark, BenchmarkResult
+from common.base import Benchmark, BenchmarkResult, stt_output_fields
+from common.benchmark_errors import mark_empty_stt
 from common.metrics import compute_wer, elapsed_ms, estimate_stt_cost_usd
 
 
 load_dotenv()
 
-RATE_PER_MINUTE = 0.0043  # Nova-3 pre-recorded (verificar en deepgram.com/pricing)
+from common.rates import DEEPGRAM_NOVA3_USD_PER_MIN
+
+RATE_PER_MINUTE = DEEPGRAM_NOVA3_USD_PER_MIN
 
 
 class DeepgramBenchmark(Benchmark):
@@ -52,7 +52,7 @@ class DeepgramBenchmark(Benchmark):
         wer = compute_wer(test_input.reference_text, text)
         cost = estimate_stt_cost_usd(duration, RATE_PER_MINUTE)
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -67,8 +67,9 @@ class DeepgramBenchmark(Benchmark):
             cost_usd=cost,
             quality_metric=wer,
             quality_metric_name="WER",
-            output_preview=text[:200],
+            **stt_output_fields(text),
         )
+        return mark_empty_stt(result, text)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,4 @@
-"""Benchmark Google Gemini Flash vía google-genai SDK.
-
-Precios verificar en: https://ai.google.dev/pricing
-Gemini 2.5 Flash tiene tier gratuito generoso para el benchmarking.
-"""
+"""Google Gemini Flash vía google-genai SDK."""
 from __future__ import annotations
 
 import os
@@ -12,6 +8,7 @@ from dotenv import load_dotenv
 from google import genai
 
 from common.base import Benchmark, BenchmarkResult, llm_output_fields
+from common.benchmark_errors import mark_empty_llm
 from common.metrics import elapsed_ms, estimate_llm_cost_usd
 from common.prompts import LLM_PROMPTS, PromptSpec
 
@@ -19,8 +16,13 @@ from common.prompts import LLM_PROMPTS, PromptSpec
 load_dotenv()
 
 # Rate público de Gemini 2.5 Flash (pay-as-you-go). El tier gratuito no cobra.
-INPUT_RATE_PER_MILLION = 0.30
-OUTPUT_RATE_PER_MILLION = 2.50
+from common.rates import (
+    GEMINI_FLASH_INPUT_PER_M,
+    GEMINI_FLASH_OUTPUT_PER_M,
+)
+
+INPUT_RATE_PER_MILLION = GEMINI_FLASH_INPUT_PER_M
+OUTPUT_RATE_PER_MILLION = GEMINI_FLASH_OUTPUT_PER_M
 
 
 class GeminiBenchmark(Benchmark):
@@ -60,6 +62,18 @@ class GeminiBenchmark(Benchmark):
 
         input_tokens = getattr(usage, "prompt_token_count", 0) if usage else 0
         output_tokens = getattr(usage, "candidates_token_count", 0) if usage else 0
+        notes = ""
+        if (input_tokens == 0 and output_tokens == 0) and output:
+            try:
+                in_meta = self.client.models.count_tokens(
+                    model=self.model, contents=test_input["content"]
+                )
+                out_meta = self.client.models.count_tokens(model=self.model, contents=output)
+                input_tokens = getattr(in_meta, "total_tokens", 0) or 0
+                output_tokens = getattr(out_meta, "total_tokens", 0) or 0
+                notes = "tokens=count_tokens_fallback"
+            except Exception:
+                notes = "usage_no_reportado_en_stream"
         cost = estimate_llm_cost_usd(
             input_tokens,
             output_tokens,
@@ -67,13 +81,14 @@ class GeminiBenchmark(Benchmark):
             OUTPUT_RATE_PER_MILLION,
         )
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
             deployment=self.deployment,
             test_id=test_input["id"],
             run_id=run_id,
+            notes=notes,
             latency_ms=total_ms,
             ttft_ms=ttft_ms,
             input_size=input_tokens,
@@ -83,6 +98,7 @@ class GeminiBenchmark(Benchmark):
             cost_usd=cost,
             **llm_output_fields(output),
         )
+        return mark_empty_llm(result, output)
 
 
 if __name__ == "__main__":

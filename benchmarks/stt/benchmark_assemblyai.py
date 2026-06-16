@@ -1,4 +1,4 @@
-"""Benchmark AssemblyAI (Universal-3 Pro + fallback Universal-2)."""
+"""STT con AssemblyAI (Universal-3 Pro; fallback a Universal-2)."""
 from __future__ import annotations
 
 import os
@@ -8,13 +8,16 @@ import assemblyai as aai
 from dotenv import load_dotenv
 
 from common.audio_samples import AudioSample, load_audio_samples
-from common.base import Benchmark, BenchmarkResult
+from common.base import Benchmark, BenchmarkResult, stt_output_fields
+from common.benchmark_errors import mark_empty_stt, provider_error
 from common.metrics import compute_wer, elapsed_ms, estimate_stt_cost_usd
 
 
 load_dotenv()
 
-RATE_PER_MINUTE = 0.0036  # AssemblyAI Best model (verificar en assemblyai.com/pricing)
+from common.rates import ASSEMBLYAI_USD_PER_MIN
+
+RATE_PER_MINUTE = ASSEMBLYAI_USD_PER_MIN
 
 
 class AssemblyAIBenchmark(Benchmark):
@@ -45,13 +48,15 @@ class AssemblyAIBenchmark(Benchmark):
         total_ms = elapsed_ms(start)
 
         if transcript.status == aai.TranscriptStatus.error:
-            raise RuntimeError(f"AssemblyAI error: {transcript.error}")
+            raise RuntimeError(
+                provider_error("assemblyai", transcript.error or "status=error", stage="stt")
+            )
         text = transcript.text or ""
 
         wer = compute_wer(test_input.reference_text, text)
         cost = estimate_stt_cost_usd(duration, RATE_PER_MINUTE)
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -66,8 +71,9 @@ class AssemblyAIBenchmark(Benchmark):
             cost_usd=cost,
             quality_metric=wer,
             quality_metric_name="WER",
-            output_preview=text[:200],
+            **stt_output_fields(text),
         )
+        return mark_empty_stt(result, text)
 
 
 if __name__ == "__main__":

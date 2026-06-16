@@ -1,0 +1,9 @@
+{
+  "fecha": "2026-06-15",
+  "herramienta": "Ookla Speedtest",
+  "descarga_mbps": 238.9,
+  "subida_mbps": 65.3,
+  "ping_ms": 61,
+  "servidor": "Managua (NI)",
+  "nota": "Plan contratado con el ISP ~750 Mbps; la medición refleja condiciones de pared el día del benchmark E2E, no la velocidad teórica del contrato."
+}

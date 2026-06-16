@@ -1,13 +1,4 @@
-"""Benchmark LLM local con Ollama (Llama 3.2 3B por defecto).
-
-Requisitos previos:
-    - Instalar Ollama: https://ollama.com/download
-    - `ollama pull llama3.2:3b`  (o el modelo declarado en OLLAMA_MODEL)
-    - Servidor levantado en http://localhost:11434
-
-Costo: 0 USD por llamada (offline). El "costo real" se reporta como infraestructura:
-VRAM/RAM/energía, lo cual se documenta a mano en el reporte PDF.
-"""
+"""LLM local con Ollama (modelo por defecto: llama3.2:3b)."""
 from __future__ import annotations
 
 import os
@@ -17,6 +8,7 @@ import ollama
 from dotenv import load_dotenv
 
 from common.base import Benchmark, BenchmarkResult, llm_output_fields
+from common.benchmark_errors import mark_empty_llm
 from common.metrics import elapsed_ms
 from common.prompts import LLM_PROMPTS, PromptSpec
 
@@ -33,9 +25,7 @@ class OllamaBenchmark(Benchmark):
         host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
         self.model = model or os.getenv("OLLAMA_MODEL", "llama3.2:3b")
         self.client = ollama.Client(host=host)
-        # Warm-up: la primera llamada de un modelo no cargado en VRAM es muy
-        # lenta. Se hace una llamada de calentamiento para evitar contaminar
-        # la primera medición.
+        # Primera llamada con modelo frío tarda mucho; se descarta del cronometraje
         try:
             self.client.generate(model=self.model, prompt="hola", options={"num_predict": 1})
             print(f"[INFO] Ollama warm-up OK ({self.model})")
@@ -67,7 +57,7 @@ class OllamaBenchmark(Benchmark):
         total_ms = elapsed_ms(start)
         output = "".join(output_chunks)
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -83,6 +73,7 @@ class OllamaBenchmark(Benchmark):
             cost_usd=0.0,  # offline
             **llm_output_fields(output),
         )
+        return mark_empty_llm(result, output)
 
 
 if __name__ == "__main__":

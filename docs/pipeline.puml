@@ -1,34 +1,35 @@
 @startuml
-title Pipeline de Comunicación · Agente Virtual Inteligente
+title Pipeline de Comunicación · Agente Virtual Inteligente (Unity)
 
 actor "Usuario" as User
-participant "Unity Client" as Unity
-participant "Captura de Audio\n(micrófono)" as Mic
+participant "Cliente Unity\n(C# / AudioSource)" as Unity
+participant "Captura de Audio\n(Microphone / AudioClip)" as Mic
 participant "STT Service\n(local / cloud)" as STT
 participant "LLM Service\n(local / cloud)" as LLM
 participant "TTS Service\n(local / cloud)" as TTS
-participant "Reproductor\n(Unity AudioSource)" as Speaker
 
 User -> Mic : habla
-Mic -> Unity : audio PCM
+Mic -> Unity : audio PCM / WAV
 Unity -> STT : POST audio (REST / WebSocket)
-STT --> Unity : texto transcrito (UTF-8) + WER esperado
+STT --> Unity : texto transcrito (UTF-8)
 Unity -> LLM : prompt + contexto + system prompt
 note right of LLM
   Streaming token a token
   TTFT crítico para UX
 end note
-LLM --> Unity : tokens (stream) + usage
+LLM --> Unity : tokens (SSE / stream) + usage
 Unity -> Unity : agrega tokens y arma respuesta final
 Unity -> TTS : texto a sintetizar (REST / WebSocket / gRPC)
 TTS --> Unity : audio MP3/PCM (stream)
-Unity -> Speaker : reproducir audio + sincronizar lip-sync
-Speaker --> User : voz del agente
+Unity -> Unity : AudioClip + AudioSource.Play()
+Unity --> User : voz del agente (avatar / altavoz)
 
 note over Unity, LLM
   En modo local el LLM corre vía Ollama
   (HTTP a localhost:11434). En modo cloud
   se usa OpenAI/Anthropic/Gemini/Groq.
+  Azure Speech SDK .NET unifica STT+TTS
+  en escenarios Microsoft / Unity.
 end note
 
 note over STT

@@ -1,8 +1,4 @@
-"""Benchmark Anthropic Claude Sonnet vía API.
-
-Modelo por defecto: claude-sonnet-4-6 (reemplaza claude-3-5-sonnet-latest, retirado).
-Precios verificar en: https://www.anthropic.com/pricing
-"""
+"""Anthropic Claude Sonnet (claude-sonnet-4-6 por defecto)."""
 from __future__ import annotations
 
 import os
@@ -12,8 +8,9 @@ import anthropic
 from dotenv import load_dotenv
 
 from common.base import Benchmark, BenchmarkResult, llm_output_fields
+from common.benchmark_errors import mark_empty_llm
 from common.metrics import elapsed_ms, estimate_llm_cost_usd
-from common.pricing import ANTHROPIC_SONNET4_INPUT_PER_M, ANTHROPIC_SONNET4_OUTPUT_PER_M
+from common.rates import ANTHROPIC_SONNET4_INPUT_PER_M, ANTHROPIC_SONNET4_OUTPUT_PER_M
 from common.prompts import LLM_PROMPTS, PromptSpec
 
 
@@ -67,7 +64,7 @@ class AnthropicBenchmark(Benchmark):
             OUTPUT_RATE_PER_MILLION,
         )
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -83,6 +80,7 @@ class AnthropicBenchmark(Benchmark):
             cost_usd=cost,
             **llm_output_fields(output),
         )
+        return mark_empty_llm(result, output)
 
 
 if __name__ == "__main__":

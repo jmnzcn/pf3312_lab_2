@@ -1,10 +1,4 @@
-"""Benchmark Google Cloud Text-to-Speech (voces Neural2 / WaveNet).
-
-Requisitos:
-    - Habilitar la API "Cloud Text-to-Speech" en GCP.
-    - Crear una Service Account, descargar el JSON de credenciales.
-    - Apuntar GOOGLE_APPLICATION_CREDENTIALS al JSON en .env.
-"""
+"""Google Cloud TTS (Neural2 / WaveNet). Requiere GOOGLE_APPLICATION_CREDENTIALS."""
 from __future__ import annotations
 
 import os
@@ -16,13 +10,16 @@ from google.cloud import texttospeech
 
 from common.audio_samples import TTS_TEXTS
 from common.base import Benchmark, BenchmarkResult
+from common.benchmark_errors import mark_tts_output
 from common.metrics import elapsed_ms, estimate_tts_cost_usd
 
 
 load_dotenv()
 
 # Neural2 standard: 16 USD/M chars (verificar precio actual).
-RATE_PER_MILLION_CHARS = 16.0
+from common.rates import GOOGLE_TTS_USD_PER_M_CHARS
+
+RATE_PER_MILLION_CHARS = GOOGLE_TTS_USD_PER_M_CHARS
 LANGUAGE_CODE = "es-ES"
 VOICE_NAME = "es-ES-Neural2-A"
 
@@ -68,7 +65,7 @@ class GoogleTTSBenchmark(Benchmark):
         out_file.write_bytes(response.audio_content)
         cost = estimate_tts_cost_usd(len(text), RATE_PER_MILLION_CHARS)
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -83,6 +80,7 @@ class GoogleTTSBenchmark(Benchmark):
             cost_usd=cost,
             output_preview=str(out_file.name),
         )
+        return mark_tts_output(result, out_file)
 
 
 if __name__ == "__main__":

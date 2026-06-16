@@ -1,4 +1,4 @@
-"""Benchmark OpenAI TTS (gpt-4o-mini-tts)."""
+"""TTS con OpenAI (gpt-4o-mini-tts)."""
 from __future__ import annotations
 
 import os
@@ -10,13 +10,16 @@ from openai import OpenAI
 
 from common.audio_samples import TTS_TEXTS
 from common.base import Benchmark, BenchmarkResult
+from common.benchmark_errors import mark_tts_output
 from common.metrics import elapsed_ms, estimate_tts_cost_usd
 
 
 load_dotenv()
 
 # gpt-4o-mini-tts pricing (verificar en openai.com/api/pricing)
-RATE_PER_MILLION_CHARS = 600.0  # USD/M chars aprox (15 USD/1M tokens audio output)
+from common.rates import OPENAI_TTS_USD_PER_M_CHARS
+
+RATE_PER_MILLION_CHARS = OPENAI_TTS_USD_PER_M_CHARS
 
 OUTPUT_DIR = Path(__file__).resolve().parent.parent.parent / "results" / "tts_outputs"
 
@@ -50,7 +53,7 @@ class OpenAITTSBenchmark(Benchmark):
 
         cost = estimate_tts_cost_usd(len(text), RATE_PER_MILLION_CHARS)
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -65,6 +68,7 @@ class OpenAITTSBenchmark(Benchmark):
             cost_usd=cost,
             output_preview=str(out_file.name),
         )
+        return mark_tts_output(result, out_file)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ secrets/
 !data/**/*.json
 !results/run_manifest.json
 !results/hardware_snapshot.json
+!results/network_speedtest.json
 venv/
 .venv/
 env/
@@ -14,7 +15,7 @@ env/
 
 # Resultados crudos del benchmark (regenerables, pueden ser pesados)
 results/raw/
-results/cache/
+results/run_all.log
 
 # Modelos locales descargados
 models/
@@ -22,12 +23,13 @@ models/
 *.bin
 *.gguf
 
-# Audio de prueba (si son archivos pesados; los pequeños sí se versionan)
-data/test_audio/*.wav
+# Audio de prueba STT: los 14 .wav canónicos del benchmark SÍ van en Git (~7 MB).
+# Otros formatos temporales quedan fuera.
 data/test_audio/*.mp3
 data/test_audio/*.flac
 data/test_audio/*.ogg
 !data/test_audio/README.md
+!data/test_audio/GUIA_GRABACION.md
 !data/test_audio/.gitkeep
 
 # Outputs de TTS (los regeneramos al correr)
@@ -45,6 +47,7 @@ __pycache__/
 *.so
 .Python
 .pytest_cache/
+.pytest_smoke_work/
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
@@ -58,3 +61,40 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Pipeline informe/PDF y redacción interpretativa (solo local; no publicar en Git)
+docs/tablas_generadas/
+docs/analisis_local/
+docs/dimensiones_generadas/
+docs/informe_PF3312_Proyecto2.pdf
+docs/informe_template.md
+data/llm_quality_notas.json
+data/tts_mos_notas.json
+scripts/export_pdf.py
+scripts/export_docx.py
+entrega/
+docs/_informe_export.md
+docs/_informe_export_docx.md
+analysis/generate_analisis_local.py
+analysis/generate_dimensions_depth.py
+analysis/dimensions_depth.py
+analysis/dimensions_rubric.py
+analysis/dimensions_catalog_notes.py
+analysis/qualitative_local.py
+analysis/empirical_comparisons.py
+analysis/generate_pipeline_cost.py
+analysis/generate_unit_pricing.py
+analysis/generate_integration_matrix.py
+analysis/generate_e2e_pipeline.py
+analysis/generate_empirical_rigor.py
+analysis/output_paths.py
+analysis/informe_refs.py
+analysis/merge_informe.py
+analysis/merge_sections.py
+analysis/pipeline_steps_local.py
+analysis/pipeline_steps_local.example.py
+docs/informe.md
+docs/informe_PF3312_Proyecto2.html
+docs/assets/informe_academico.css
+tests/test_merge_informe.py
+tests/test_integration_matrix.py

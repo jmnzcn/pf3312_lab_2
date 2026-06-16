@@ -1,4 +1,4 @@
-"""Benchmark Azure Speech-to-Text."""
+"""STT con Azure Speech."""
 from __future__ import annotations
 
 import os
@@ -8,13 +8,17 @@ import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 
 from common.audio_samples import AudioSample, load_audio_samples
-from common.base import Benchmark, BenchmarkResult
+from common.azure_speech import cancellation_message, speech_result_error
+from common.base import Benchmark, BenchmarkResult, stt_output_fields
+from common.benchmark_errors import mark_empty_stt
 from common.metrics import compute_wer, elapsed_ms, estimate_stt_cost_usd
 
 
 load_dotenv()
 
-RATE_PER_MINUTE = 0.0167  # Standard tier (verificar en azure.microsoft.com/pricing)
+from common.rates import AZURE_STT_USD_PER_MIN
+
+RATE_PER_MINUTE = AZURE_STT_USD_PER_MIN
 
 
 class AzureSpeechBenchmark(Benchmark):
@@ -46,30 +50,46 @@ class AzureSpeechBenchmark(Benchmark):
 
         results_text: list[str] = []
         done = {"v": False}
+        cancel_info: dict[str, str] = {}
 
-        def stopped(evt):  # noqa: ANN001 - callback Azure
+        def stopped(_evt):
             done["v"] = True
 
-        def recognized(evt):  # noqa: ANN001
+        def recognized(evt):
             if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
                 results_text.append(evt.result.text)
 
+        def canceled(evt):
+            cancel_info["msg"] = cancellation_message(
+                evt.result, prefix="Azure STT canceled"
+            )
+            done["v"] = True
+
         recognizer.recognized.connect(recognized)
         recognizer.session_stopped.connect(stopped)
-        recognizer.canceled.connect(stopped)
+        recognizer.canceled.connect(canceled)
 
         start = time.perf_counter()
+        max_wait = max(120.0, duration * 3.0 + 30.0)
+        deadline = time.perf_counter() + max_wait
         recognizer.start_continuous_recognition()
         while not done["v"]:
+            if time.perf_counter() > deadline:
+                recognizer.stop_continuous_recognition()
+                raise TimeoutError(
+                    f"Azure STT sin respuesta tras {max_wait:.0f}s "
+                    f"(audio {duration:.1f}s)"
+                )
             time.sleep(0.05)
         recognizer.stop_continuous_recognition()
         total_ms = elapsed_ms(start)
 
         text = " ".join(results_text).strip()
-        wer = compute_wer(test_input.reference_text, text)
+        wer = compute_wer(test_input.reference_text, text) if text else None
         cost = estimate_stt_cost_usd(duration, RATE_PER_MINUTE)
 
-        return BenchmarkResult(
+        detail = cancel_info.get("msg", "sesión finalizada sin RecognizedSpeech")
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -84,8 +104,10 @@ class AzureSpeechBenchmark(Benchmark):
             cost_usd=cost,
             quality_metric=wer,
             quality_metric_name="WER",
-            output_preview=text[:200],
+            **stt_output_fields(text),
+            notes=detail if not text else "",
         )
+        return mark_empty_stt(result, text, detail=detail)
 
 
 if __name__ == "__main__":

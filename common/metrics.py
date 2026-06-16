@@ -1,4 +1,4 @@
-"""Métricas y helpers: cronómetro, WER, estimaciones de costo."""
+"""Cronómetro, WER y fórmulas de costo usadas en los benchmarks."""
 from __future__ import annotations
 
 import time
@@ -10,13 +10,7 @@ import jiwer
 
 @contextmanager
 def stopwatch() -> Iterator[dict]:
-    """Mide tiempo en milisegundos.
-
-    Uso:
-        with stopwatch() as sw:
-            ... código a medir ...
-        print(sw["elapsed_ms"])
-    """
+    """Devuelve elapsed_ms al salir del bloque with."""
     state: dict = {"elapsed_ms": None, "start": time.perf_counter()}
     try:
         yield state
@@ -29,7 +23,7 @@ def elapsed_ms(start_perf: float) -> float:
 
 
 def compute_wer(reference: str, hypothesis: str) -> float:
-    """Word Error Rate normalizado (minúsculas, sin puntuación)."""
+    """WER con normalización: minúsculas, sin puntuación, espacios colapsados."""
     transform = jiwer.Compose(
         [
             jiwer.ToLowerCase(),
@@ -47,7 +41,7 @@ def compute_wer(reference: str, hypothesis: str) -> float:
     )
 
 
-# === Estimaciones de costo ===
+# Costos estimados (USD)
 
 
 def estimate_llm_cost_usd(
@@ -56,7 +50,7 @@ def estimate_llm_cost_usd(
     input_rate_per_million: float,
     output_rate_per_million: float,
 ) -> float:
-    """USD = (in_tokens * in_rate + out_tokens * out_rate) / 1_000_000."""
+    """Costo LLM = (tokens_entrada × tarifa_in + tokens_salida × tarifa_out) / 1e6."""
     return (
         input_tokens * input_rate_per_million
         + output_tokens * output_rate_per_million

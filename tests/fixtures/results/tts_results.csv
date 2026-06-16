@@ -1,0 +1,2 @@
+timestamp,run_batch_id,category,provider,model,deployment,test_id,run_id,latency_ms,ttft_ms,input_size,output_size,input_unit,output_unit,cost_usd,quality_metric,quality_metric_name,output_preview,notes,error
+2026-01-01T00:00:00Z,2026-01-01T00:00:00Z,tts,google,es-ES-Neural2-A,cloud,t1_corto,1,600.0,,40,12000,chars,bytes,0.0006,,,google_t1_corto_run1.mp3,,

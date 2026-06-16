@@ -1,10 +1,4 @@
-"""Genera WAV de STT con Piper para entradas marcadas como synthetic_piper.
-
-Uso:
-    python scripts/generate_stt_audio_piper.py
-
-Solo procesa muestras con "source": "synthetic_piper" en reference_transcriptions.json.
-"""
+"""Genera los WAV sintéticos de STT con Piper (entradas synthetic_piper)."""
 from __future__ import annotations
 
 import json
@@ -18,6 +12,7 @@ import soundfile as sf
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 REFERENCE_FILE = PROJECT_ROOT / "data" / "reference_transcriptions.json"
 OUTPUT_DIR = PROJECT_ROOT / "data" / "test_audio"
 TARGET_SR = 16_000

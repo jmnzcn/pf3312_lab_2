@@ -1,27 +1,11 @@
 {
-  "run_batch_id": "2026-06-08T05:47:46Z",
-  "started_at": "2026-06-08T05:47:46Z",
+  "run_batch_id": "2026-06-14T21:50:59Z",
+  "started_at": "2026-06-14T21:50:59Z",
   "runs_per_input": 5,
   "python": "3.13.13",
   "platform": "Windows-11-10.0.26200-SP0",
-  "note": "full pipeline",
-  "hardware": {
-    "platform": "Windows-11-10.0.26200-SP0",
-    "cpu_count": 12,
-    "ram_total_gb": 31.73,
-    "ram_available_gb": 9.0,
-    "gpus": [
-      {
-        "name": "Quadro P2000",
-        "vram_total_mb": 4096.0,
-        "vram_used_mb": 865.0,
-        "driver": "573.96"
-      }
-    ],
-    "local_models": {
-      "ollama": "llama3.2:3b",
-      "faster_whisper": "large-v3 int8_float16",
-      "piper": "es_ES-davefx-medium"
-    }
-  }
+  "note": "full pipeline (LLM + STT + TTS); E2E en batch 2026-06-15T06:20:19Z; STT l2 refrescado 2026-06-16",
+  "catalog_fingerprint": "ade3df3c5aaf3008",
+  "stt_sample_count": 14,
+  "e2e_batch_id": "2026-06-15T06:20:19Z"
 }

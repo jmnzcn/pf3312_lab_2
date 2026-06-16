@@ -1,18 +1,4 @@
-"""Genera análisis de las 6 dimensiones del enunciado PF-3312.
-
-Salida en docs/dimensiones_generadas/:
-  - Una tabla/gráfico por dimensión
-  - Matriz maestra 15 servicios × 6 dimensiones
-  - resumen_ejecutivo.md
-
-Dimensiones:
-  1. Latencia empírica (CSV: latency_ms, ttft_ms)
-  2. Precisión / calidad (CSV: WER STT; cualitativo LLM/TTS)
-  3. Costo (CSV: cost_usd)
-  4. Privacidad (catálogo 1-5)
-  5. Customización (catálogo 1-5)
-  6. Integración (catálogo 1-5)
-"""
+"""Arma las 6 dimensiones del enunciado y las guarda en docs/dimensiones_datos/."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -23,20 +9,21 @@ from tabulate import tabulate
 
 import json
 
+from analysis.chart_theme import apply_theme, qualitative_cmap, save_figure, style_axes
 from analysis.aggregate import (
     aggregate_category,
-    analysis_meta_line,
     build_category_matrix_5x6,
+    format_matrix_for_display,
     load_category_df,
     stt_wer_by_source,
 )
 from analysis.dimensions_catalog import QUALITATIVE
+from common.paths import docs_dir, project_root, results_dir
 
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-RESULTS_DIR = PROJECT_ROOT / "results"
-OUT_DIR = PROJECT_ROOT / "docs" / "dimensiones_generadas"
-CHARTS_DIR = PROJECT_ROOT / "docs" / "graficos_generados"
+PROJECT_ROOT = project_root()
+RESULTS_DIR = results_dir()
+OUT_DIR = docs_dir() / "dimensiones_datos"
+CHARTS_DIR = docs_dir() / "graficos_generados"
 MOS_FILE = PROJECT_ROOT / "data" / "tts_mos_scores.json"
 
 DIMENSIONS = [
@@ -105,19 +92,16 @@ def _build_master_rows() -> list[dict]:
             row["privacidad_1_5"] = q.privacidad
             row["customizacion_1_5"] = q.customizacion
             row["integracion_1_5"] = q.integracion
-            row["nota_privacidad"] = q.privacidad_nota
-            row["nota_custom"] = q.customizacion_nota
-            row["nota_integracion"] = q.integracion_nota
         else:
             row["privacidad_1_5"] = row["customizacion_1_5"] = row["integracion_1_5"] = None
 
-        # Precisión resumen
+        # Texto de precisión que va en la matriz
         if cat == "stt" and row.get("wer") is not None:
             row["precision_resumen"] = f"WER={row['wer']}"
         elif cat == "llm":
-            row["precision_resumen"] = "Coherencia (cualitativo en informe)"
+            row["precision_resumen"] = "Coherencia (revisión manual)"
         else:
-            row["precision_resumen"] = "MOS 1-5 (escucha tts_outputs/)"
+            row["precision_resumen"] = "MOS 1-5 (escucha manual)"
 
         rows.append(row)
     return rows
@@ -133,23 +117,24 @@ def _heatmap_qualitative(master: pd.DataFrame, col: str, title: str, fname: str)
     sub = master.dropna(subset=[col]).copy()
     if sub.empty:
         return
+    apply_theme()
     pivot = sub.pivot_table(index="servicio", values=col, aggfunc="first")
-    fig, ax = plt.subplots(figsize=(6, max(4, len(pivot) * 0.35)))
-    im = ax.imshow(pivot.values, aspect="auto", cmap="YlGn", vmin=1, vmax=5)
+    fig, ax = plt.subplots(figsize=(7, max(4.5, len(pivot) * 0.38)))
+    cmap = qualitative_cmap()
+    im = ax.imshow(pivot.values, aspect="auto", cmap=cmap, vmin=1, vmax=5)
     ax.set_xticks([0])
-    ax.set_xticklabels([title])
+    ax.set_xticklabels([title], fontsize=9, fontweight="600")
     ax.set_yticks(range(len(pivot.index)))
-    ax.set_yticklabels(pivot.index, fontsize=8)
+    ax.set_yticklabels(pivot.index, fontsize=8.5)
     for i, v in enumerate(pivot.values.flatten()):
-        ax.text(0, i, f"{int(v)}", ha="center", va="center", color="black", fontsize=9)
-    plt.colorbar(im, ax=ax, label="Puntuación 1-5")
-    ax.set_title(title)
-    fig.tight_layout()
+        txt_color = "white" if float(v) >= 3.5 else "#1E293B"
+        ax.text(0, i, f"{int(v)}", ha="center", va="center", color=txt_color, fontsize=10, fontweight="bold")
+    cbar = plt.colorbar(im, ax=ax, label="Puntuación 1-5", shrink=0.85)
+    cbar.ax.tick_params(labelsize=8)
+    style_axes(ax, title=title)
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
-    out = CHARTS_DIR / fname
-    fig.savefig(out, dpi=140)
-    plt.close(fig)
-    print(f"OK {out.relative_to(PROJECT_ROOT)}")
+    save_figure(fig, CHARTS_DIR / fname, dpi=160)
+    print(f"OK {(CHARTS_DIR / fname).relative_to(PROJECT_ROOT)}")
 
 
 def main() -> None:
@@ -157,42 +142,42 @@ def main() -> None:
     master_rows = _build_master_rows()
     master = pd.DataFrame(master_rows)
 
-    # --- Dimensión 1: Latencia ---
+    # Dimensión 1: latencia
     lat = master[["servicio", "latencia_ms", "ttft_ms", "categoria"]].copy()
     lat = lat.dropna(subset=["latencia_ms"], how="all")
     body = tabulate(lat, headers="keys", tablefmt="github", showindex=False, floatfmt=".2f")
     body += "\n\n*TTFT solo aplica a LLM con streaming.*\n"
-    _write_md(OUT_DIR / "1_latencia.md", "Dimensión 1 — Latencia empírica", body)
+    _write_md(OUT_DIR / "1_latencia.md", "Dimensión 1: Latencia empírica", body)
 
-    # --- Dimensión 2: Precisión ---
+    # Dimensión 2: precisión
     prec = master[["servicio", "categoria", "wer", "precision_resumen"]].copy()
     _write_md(
         OUT_DIR / "2_precision.md",
-        "Dimensión 2 — Precisión y calidad",
+        "Dimensión 2: Precisión y calidad",
         tabulate(prec, headers="keys", tablefmt="github", showindex=False),
     )
 
-    # --- Dimensión 3: Costo ---
+    # Dimensión 3: costo
     cost = master[["servicio", "costo_usd", "categoria"]].copy()
     cost = cost[cost["costo_usd"].notna()]
     _write_md(
         OUT_DIR / "3_costo.md",
-        "Dimensión 3 — Costo (USD por llamada, estimado)",
+        "Dimensión 3: Costo (USD por llamada, estimado)",
         tabulate(cost.round(6), headers="keys", tablefmt="github", showindex=False),
     )
 
-    # --- Dimensiones 4-6 cualitativas ---
-    for key, col, note_col, title, fname in [
-        ("4_privacidad", "privacidad_1_5", "nota_privacidad", "Privacidad y gobernanza", "heatmap_privacidad.png"),
-        ("5_customizacion", "customizacion_1_5", "nota_custom", "Customización", "heatmap_customizacion.png"),
-        ("6_integracion", "integracion_1_5", "nota_integracion", "Integración", "heatmap_integracion.png"),
+    # Dimensiones 4-6 (catálogo cualitativo)
+    for key, col, title, fname in [
+        ("4_privacidad", "privacidad_1_5", "Privacidad y gobernanza", "heatmap_privacidad.png"),
+        ("5_customizacion", "customizacion_1_5", "Customización", "heatmap_customizacion.png"),
+        ("6_integracion", "integracion_1_5", "Integración", "heatmap_integracion.png"),
     ]:
-        sub = master[["servicio", col, note_col]].dropna(subset=[col])
+        sub = master[["servicio", col]].dropna(subset=[col])
         tbl = tabulate(sub, headers="keys", tablefmt="github", showindex=False)
-        _write_md(OUT_DIR / f"{key}.md", f"Dimensión — {title}", tbl)
+        _write_md(OUT_DIR / f"{key}.md", f"Dimensión: {title}", tbl)
         _heatmap_qualitative(master, col, title, fname)
 
-    # --- Matriz maestra ---
+    # Matriz 15×6
     matrix_cols = [
         "servicio",
         "latencia_ms",
@@ -204,94 +189,80 @@ def main() -> None:
         "integracion_1_5",
         "precision_resumen",
     ]
-    matrix = master[matrix_cols]
+    matrix = format_matrix_for_display(master[matrix_cols])
+    matriz_tbl = tabulate(matrix, headers="keys", tablefmt="github", showindex=False, floatfmt=".4f")
+    matriz_body = (
+        "*Los 15 servicios en las seis dimensiones del enunciado. "
+        "WER solo en STT; TTFT solo en LLM; Priv./Cust./Integr. van de 1 a 5. "
+        "Gráficos en `docs/graficos_generados/`.*\n\n"
+        f"{matriz_tbl}\n"
+    )
     _write_md(
         OUT_DIR / "matriz_6_dimensiones.md",
-        "Matriz maestra — 6 dimensiones × servicios",
-        tabulate(matrix, headers="keys", tablefmt="github", showindex=False, floatfmt=".4f"),
+        "Matriz maestra: 6 dimensiones × servicios",
+        matriz_body,
     )
 
-    # --- Resumen ejecutivo ---
-    lines = [
-        "## Cobertura de dimensiones en este repo\n",
-        "| Dimensión | Fuente en el proyecto |",
-        "|-----------|------------------------|",
-        "| 1 Latencia | `results/*_results.csv` (automático) |",
-        "| 2 Precisión | WER en STT (automático); LLM/TTS cualitativo |",
-        "| 3 Costo | CSV (estimado por rates en cada script) |",
-        "| 4 Privacidad | `analysis/dimensions_catalog.py` (1-5, revisar políticas) |",
-        "| 5 Customización | catálogo 1-5 |",
-        "| 6 Integración | catálogo 1-5 |",
-        "",
-        "## Servicios con datos de benchmark",
-    ]
-    for cat in ("llm", "stt", "tts"):
-        n = len(master[master["categoria"] == cat])
-        csv_exists = (RESULTS_DIR / f"{cat}_results.csv").exists()
-        lines.append(f"- **{cat.upper()}**: {n} filas en matriz; CSV={'sí' if csv_exists else 'no'}")
-    lines.append("\n## Mejores por dimensión (solo filas con datos)\n")
-    if master["latencia_ms"].notna().any():
-        best = master.loc[master["latencia_ms"].idxmin()]
-        lines.append(f"- Menor latencia: **{best['servicio']}** ({best['latencia_ms']} ms)")
-    if master["wer"].notna().any():
-        best_w = master.loc[master["wer"].idxmin()]
-        lines.append(f"- Menor WER (STT): **{best_w['servicio']}** ({best_w['wer']})")
-    if master["costo_usd"].notna().any():
-        best_c = master.loc[master["costo_usd"].idxmin()]
-        lines.append(f"- Menor costo/llamada: **{best_c['servicio']}** (${best_c['costo_usd']})")
-    for col, label in [
-        ("privacidad_1_5", "Privacidad"),
-        ("customizacion_1_5", "Customización"),
-        ("integracion_1_5", "Integración"),
-    ]:
-        if master[col].notna().any():
-            best_q = master.loc[master[col].idxmax()]
-            lines.append(f"- Mayor {label} (catálogo): **{best_q['servicio']}** ({int(best_q[col])}/5)")
-
-    lines.insert(0, analysis_meta_line())
-    _write_md(OUT_DIR / "resumen_ejecutivo.md", "Resumen — 6 dimensiones", "\n".join(lines))
-
-    # STT: WER por fuente de audio (Piper vs FLEURS)
+    # WER STT agrupado por fuente de audio (solo tabla + figura)
     stt_df = _load_ok("stt")
     wer_src = stt_wer_by_source(stt_df)
     if not wer_src.empty:
-        _write_md(
-            OUT_DIR / "stt_wer_por_fuente.md",
-            "STT — WER por fuente de audio",
-            tabulate(wer_src, headers="keys", tablefmt="github", showindex=False),
+        wer_body = tabulate(wer_src, headers="keys", tablefmt="github", showindex=False)
+        wer_body += (
+            "\n\n![WER por fuente de audio (STT)](graficos_generados/stt_wer_por_fuente.png)\n\n"
+            "*Figura: WER promedio por proveedor y tipo de audio (Piper sintético vs FLEURS "
+            "humano vs Common Voice). Barras más bajas = mejor transcripción.*\n"
         )
+        _write_md(OUT_DIR / "stt_wer_por_fuente.md", "STT: WER por fuente de audio", wer_body)
 
-    # Matrices 5×6 por categoría (enunciado)
+    # Matrices 5×6 por categoría
     for cat in ("llm", "stt", "tts"):
         m5 = build_category_matrix_5x6(cat, master)
         if m5.empty:
             continue
+        prefix = ""
+        if cat == "llm":
+            prefix = (
+                "*Desglose de la matriz maestra por capa del pipeline (LLM, STT, TTS).*\n\n"
+            )
         _write_md(
             OUT_DIR / f"matriz_5x6_{cat}.md",
-            f"Matriz 5×6 — {cat.upper()}",
-            tabulate(m5, headers="keys", tablefmt="github", showindex=False, floatfmt=".4f"),
-        )
+            f"Matriz 5×6 ({cat.upper()})",
+            prefix
+            + f"#### {cat.upper()}\n\n"
+            + tabulate(m5, headers="keys", tablefmt="github", showindex=False, floatfmt=".4f"),
+        )  # m5 ya viene con etiquetas cortas vía format_matrix_for_display
 
-    # MOS TTS desde plantilla JSON
+    # MOS TTS desde plantilla JSON (solo tabla)
     if MOS_FILE.exists():
         mos = json.loads(MOS_FILE.read_text(encoding="utf-8"))
         provs = mos.get("providers", [])
         if provs:
+            mos_body = ""
+            if mos.get("evaluador"):
+                mos_body += (
+                    f"*Evaluador: {mos['evaluador']} · "
+                    f"{mos.get('metodo', 'MOS inteligibilidad + naturalidad')}*\n\n"
+                )
+            mos_body += tabulate(provs, headers="keys", tablefmt="github", showindex=False)
             _write_md(
                 OUT_DIR / "tts_mos.md",
-                "TTS — MOS (plantilla)",
-                tabulate(provs, headers="keys", tablefmt="github", showindex=False),
+                "TTS: MOS (inteligibilidad y naturalidad)",
+                mos_body,
             )
 
-    # Combinado
+    # Combinado de tablas (repositorio)
     combined = []
-    for _, title in DIMENSIONS:
-        p = OUT_DIR / f"{title}.md"
+    for key, _ in DIMENSIONS:
+        p = OUT_DIR / f"{key}.md"
         if p.exists():
             combined.append(p.read_text(encoding="utf-8"))
-    combined.append((OUT_DIR / "matriz_6_dimensiones.md").read_text(encoding="utf-8"))
-    (OUT_DIR / "todas_las_dimensiones.md").write_text("\n\n---\n\n".join(combined), encoding="utf-8")
-    print(f"OK {OUT_DIR / 'todas_las_dimensiones.md'}")
+    matriz_path = OUT_DIR / "matriz_6_dimensiones.md"
+    if matriz_path.exists():
+        combined.append(matriz_path.read_text(encoding="utf-8"))
+    if combined:
+        (OUT_DIR / "todas_las_dimensiones.md").write_text("\n\n---\n\n".join(combined), encoding="utf-8")
+        print(f"OK {OUT_DIR / 'todas_las_dimensiones.md'}")
 
 
 if __name__ == "__main__":

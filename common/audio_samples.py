@@ -1,24 +1,7 @@
-"""Registro de audios de prueba para STT y textos para TTS.
-
-Convención:
-    - Los audios viven en `data/test_audio/` y se nombran como `<id>.wav`.
-    - Las transcripciones de referencia están en `data/reference_transcriptions.json`.
-    - Los textos para TTS están definidos directamente aquí (no hay que crearlos
-      como audio).
-
-Para STT necesitás al menos 3 audios cortos (3-10s) y 1 medio (30-60s) en español
-con su transcripción exacta de referencia para poder calcular WER.
-
-Si no querés grabar, podés:
-    - Tomar audios CC0 de Mozilla Common Voice (español): https://commonvoice.mozilla.org/es/datasets
-    - Sintetizar audios con un TTS y usar el texto original como referencia (ojo:
-      esto sesga la métrica WER porque la voz será muy clara).
-
-Si un audio listado abajo no existe en disco, los benchmarks de STT lo saltan
-con un warning.
-"""
+"""Audios STT en data/test_audio/ y textos TTS. Ver data/test_audio/README.md."""
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,6 +13,33 @@ import soundfile as sf
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 TEST_AUDIO_DIR = PROJECT_ROOT / "data" / "test_audio"
 REFERENCE_FILE = PROJECT_ROOT / "data" / "reference_transcriptions.json"
+
+CATALOG_DOC = (
+    "Catálogo STT (14 inputs activos). synthetic_piper: scripts/generate_stt_audio_piper.py. "
+    "fleurs_human: scripts/download_common_voice_samples.py. "
+    "common_voice_noisy: scripts/download_common_voice_noisy.py. "
+    "common_voice_central_america: scripts/download_cv_centroamerica_samples.py. "
+    "largos (l*): scripts/download_long_stt_samples.py."
+)
+
+EXPECTED_STT_IDS: tuple[str, ...] = (
+    "a1_saludo_corto",
+    "a2_oracion_media",
+    "a4_parrafo_tecnico",
+    "a5_acentos_cr",
+    "g1_fleurs",
+    "g2_fleurs",
+    "g4_fleurs",
+    "c1_cv_noisy",
+    "c3_cv_noisy",
+    "l1_fleurs_largo",
+    "l2_piper_largo",
+    "l4_noisy_largo",
+    "r1_cv_centroamerica",
+    "r2_cv_centroamerica_largo",
+)
+
+_REQUIRED_FIELDS = ("id", "file", "reference_text", "source")
 
 
 @dataclass
@@ -50,11 +60,88 @@ class AudioSample:
         return self.duration_sec or 0.0
 
 
+def load_catalog_data() -> dict:
+    if not REFERENCE_FILE.exists():
+        return {"samples": []}
+    return json.loads(REFERENCE_FILE.read_text(encoding="utf-8"))
+
+
+def catalog_fingerprint() -> str:
+    data = load_catalog_data()
+    payload = json.dumps(data.get("samples", []), sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def wav_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_wav_checksums() -> list[str]:
+    """Compara sha256 en disco vs. reference_transcriptions.json."""
+    warnings: list[str] = []
+    for entry in load_catalog_data().get("samples", []):
+        entry_id = entry.get("id", "?")
+        expected = entry.get("sha256")
+        if not expected:
+            warnings.append(f"Sin sha256 en catálogo: {entry_id}")
+            continue
+        wav = TEST_AUDIO_DIR / entry.get("file", "")
+        if not wav.exists():
+            warnings.append(f"WAV ausente: {wav.name} ({entry_id})")
+            continue
+        actual = wav_sha256(wav)
+        if actual != expected:
+            warnings.append(
+                f"Checksum distinto en {entry_id}: esperado {expected[:12]}…, "
+                f"en disco {actual[:12]}…"
+            )
+    return warnings
+
+
+def validate_catalog(*, require_wavs: bool = False) -> list[str]:
+    """Valida el catálogo; devuelve lista de advertencias (vacía = OK estructural)."""
+    warnings: list[str] = []
+    if not REFERENCE_FILE.exists():
+        warnings.append(f"Falta {REFERENCE_FILE.relative_to(PROJECT_ROOT)}")
+        return warnings
+
+    data = load_catalog_data()
+    samples = data.get("samples", [])
+    if not samples:
+        warnings.append("Catálogo STT vacío")
+        return warnings
+
+    seen: set[str] = set()
+    for entry in samples:
+        entry_id = entry.get("id", "")
+        for field in _REQUIRED_FIELDS:
+            if not entry.get(field):
+                warnings.append(f"Entrada {entry_id or '?'} sin campo '{field}'")
+        if entry_id in seen:
+            warnings.append(f"ID duplicado: {entry_id}")
+        seen.add(entry_id)
+        if require_wavs:
+            wav = TEST_AUDIO_DIR / entry.get("file", "")
+            if not wav.exists():
+                warnings.append(f"WAV ausente: {wav.name} ({entry_id})")
+
+    missing_ids = set(EXPECTED_STT_IDS) - seen
+    extra_ids = seen - set(EXPECTED_STT_IDS)
+    if missing_ids:
+        warnings.append(f"IDs esperados ausentes: {', '.join(sorted(missing_ids))}")
+    if extra_ids:
+        warnings.append(f"IDs no esperados en catálogo: {', '.join(sorted(extra_ids))}")
+
+    return warnings
+
+
 def load_audio_samples() -> list[AudioSample]:
     """Carga el catálogo desde reference_transcriptions.json."""
-    if not REFERENCE_FILE.exists():
-        return []
-    data = json.loads(REFERENCE_FILE.read_text(encoding="utf-8"))
+    data = load_catalog_data()
     samples: list[AudioSample] = []
     for entry in data.get("samples", []):
         samples.append(
@@ -68,11 +155,7 @@ def load_audio_samples() -> list[AudioSample]:
     return samples
 
 
-# === Textos para TTS ===
-# Reusamos algunos prompts cortos como texto a sintetizar. Para TTS no medimos
-# WER, sino latencia y costo. La naturalidad/inteligibilidad se evalúa
-# cualitativamente escuchando los outputs en results/tts_outputs/.
-
+# Textos fijos para benchmarks TTS
 TTS_TEXTS = [
     {
         "id": "t1_saludo_corto",
@@ -81,28 +164,24 @@ TTS_TEXTS = [
     {
         "id": "t2_oracion_media",
         "text": (
-            "Bienvenido al sistema de evaluación comparativa. "
-            "Hoy compararemos cinco proveedores de síntesis de voz "
-            "bajo seis dimensiones técnicas distintas."
+            "Hola. En esta prueba cada proveedor leerá la misma frase para "
+            "comparar claridad y ritmo de la voz sintetizada."
         ),
     },
     {
         "id": "t3_parrafo_largo",
         "text": (
-            "El benchmarking de servicios cognitivos para agentes virtuales "
-            "requiere evaluar latencia, precisión, costo, privacidad, "
-            "flexibilidad de personalización y facilidad de integración. "
-            "Cada categoría —reconocimiento de voz, modelos de lenguaje y "
-            "síntesis de voz— responde de manera distinta bajo esas dimensiones, "
-            "por lo cual la decisión arquitectónica debe sustentarse en datos "
-            "empíricos y no en percepciones generales."
+            "El tutor virtual permite elegir voz masculina o femenina, "
+            "activar subtítulos en pantalla y descargar un resumen de la sesión. "
+            "Si el usuario cambia el idioma, la conversación reinicia desde el "
+            "saludo inicial. También puede silenciar la síntesis y leer solo texto."
         ),
     },
     {
         "id": "t4_terminos_tecnicos",
         "text": (
             "El agente virtual procesa audio a dieciséis kilohertz, calcula "
-            "latencia al primer token y sintetiza respuestas con lip-sync."
+            "latencia al primer token y sintetiza respuestas de voz en streaming."
         ),
     },
     {

@@ -1,4 +1,4 @@
-"""Evalúa calidad LLM: JSON válido en p3 y resumen automático."""
+"""Revisa si el LLM cumple el JSON del prompt p3."""
 from __future__ import annotations
 
 import json
@@ -7,12 +7,15 @@ from pathlib import Path
 
 from tabulate import tabulate
 
-from analysis.aggregate import analysis_meta_line, load_category_df
+from analysis.aggregate import load_category_df
+from common.run_context import load_manifest
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = PROJECT_ROOT / "docs" / "dimensiones_generadas"
+from common.paths import docs_dir, project_root, results_dir
+
+PROJECT_ROOT = project_root()
+OUT_DIR = docs_dir() / "dimensiones_datos"
 NOTES_FILE = PROJECT_ROOT / "data" / "llm_quality_notes.json"
-RAW_DIR = PROJECT_ROOT / "results" / "raw"
+RAW_DIR = results_dir() / "raw"
 
 REQUIRED_AGENT_KEYS = {"nombre", "estilo", "rol", "expresiones"}
 VALID_ESTILOS = {"realista", "caricaturesco", "cartoon"}
@@ -64,7 +67,7 @@ def _valid_p3_json(text: str, *, output_size: int = 0) -> bool:
             if not isinstance(agent.get("expresiones"), list) or not agent["expresiones"]:
                 return False
         return True
-    # Previews truncados a ~200 chars: heurística si el JSON completo fue largo
+    # Si el JSON completo no cabe en el preview, se infiere por longitud
     stripped = text.strip()
     if output_size >= 120 and stripped.startswith("{") and '"agentes"' in stripped:
         return all(k in stripped for k in ('"nombre"', '"estilo"', '"rol"', '"expresiones"'))
@@ -74,11 +77,49 @@ def _valid_p3_json(text: str, *, output_size: int = 0) -> bool:
 
 
 def _load_llm_outputs() -> list[dict]:
+    manifest = load_manifest()
+    batch_id = str(manifest.get("run_batch_id") or "")
     rows: list[dict] = []
     for path in sorted(RAW_DIR.glob("llm_*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
-        rows.extend(data)
+        for row in data:
+            if batch_id and str(row.get("run_batch_id") or "") != batch_id:
+                continue
+            rows.append(row)
     return rows
+
+
+def _quality_reading_paragraph(json_rows: list[dict], notes: dict | None) -> str:
+    if not json_rows:
+        return ""
+    by_rate = {r["provider"]: r["tasa_json"] for r in json_rows}
+    perfect = [p for p, t in sorted(by_rate.items()) if t >= 1.0]
+    weak = [p for p, t in sorted(by_rate.items()) if t < 1.0]
+    bits: list[str] = []
+    if perfect:
+        bits.append(
+            ", ".join(perfect) + " cumplieron el JSON en todas las repeticiones"
+        )
+    if weak:
+        details = ", ".join(f"{p} ({by_rate[p]:.0%})" for p in weak)
+        bits.append(f"con menor cumplimiento: {details}")
+    coherencia_bits: list[str] = []
+    if notes and notes.get("providers"):
+        for row in notes["providers"]:
+            prov = row.get("provider") or row.get("proveedor")
+            score = row.get("coherencia_1_5")
+            if prov and score is not None:
+                coherencia_bits.append(f"{prov} {score}/5")
+    if coherencia_bits:
+        bits.append("coherencia manual p1/p2/p4/p5: " + ", ".join(coherencia_bits))
+    if not bits:
+        return ""
+    return (
+        "\nEn p3_json_estricto, "
+        + "; ".join(bits)
+        + ". Para JSON estricto (p3), los modelos grandes en nube fallaron menos; "
+        "detalle por prompt en el Apéndice B.\n"
+    )
 
 
 def _response_text(row: dict) -> str:
@@ -116,33 +157,48 @@ def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     records = _load_llm_outputs()
     df = load_category_df("llm", latest_only=True)
-    lines = [analysis_meta_line(), ""]
+    lines = [
+        "*Dimensión 2 (precisión LLM): revisión manual de coherencia en p1/p2/p4/p5 "
+        "y tasa de JSON válido en p3_json_estricto (escala 1-5 en las notas).*",
+        "",
+    ]
     if not records:
         lines.append("*Sin datos LLM para evaluar.*")
     else:
         json_rows = evaluate_json_prompt(records)
-        lines.append("## Prompt p3_json_estricto — cumplimiento de esquema JSON\n")
+        lines.append("## Prompt p3_json_estricto: cumplimiento de esquema JSON\n")
         lines.append(tabulate(json_rows, headers="keys", tablefmt="github", showindex=False))
-        notes_filled = False
+        notes = None
         if NOTES_FILE.exists():
             notes = json.loads(NOTES_FILE.read_text(encoding="utf-8"))
             notes_filled = any(
                 p.get("coherencia_1_5") is not None for p in notes.get("providers", [])
             )
-        if notes_filled:
-            lines.append(
-                "\n*Coherencia global en p1/p2/p4/p5: `data/llm_quality_notes.json`.*"
-            )
+            if notes_filled:
+                lines.append(
+                    "\n*Coherencia global en p1/p2/p4/p5: `data/llm_quality_notes.json`.*"
+                )
+            else:
+                lines.append(
+                    "\n*Coherencia global en p1/p2/p4/p5: completar en "
+                    "`data/llm_quality_notes.json` (escala 1-5 por proveedor).*"
+                )
+            if notes.get("evaluador"):
+                lines.append(
+                    f"\n*Evaluador: {notes['evaluador']} · {notes.get('metodo', '')}*"
+                )
+            if notes.get("providers"):
+                rows = [
+                    {k: p[k] for k in ("provider", "coherencia_1_5", "instrucciones_1_5") if k in p}
+                    for p in notes["providers"]
+                ]
+                lines.append("\n## Puntuación cualitativa (escala 1–5)\n")
+                lines.append(tabulate(rows, headers="keys", tablefmt="github", showindex=False))
         else:
             lines.append(
                 "\n*Coherencia global en p1/p2/p4/p5: completar en "
-                "`data/llm_quality_notes.json` (escala 1–5 por proveedor).*"
+                "`data/llm_quality_notes.json` (escala 1-5 por proveedor).*"
             )
-        if NOTES_FILE.exists():
-            notes = json.loads(NOTES_FILE.read_text(encoding="utf-8"))
-            if notes.get("providers"):
-                lines.append("\n## Notas cualitativas (archivo)\n")
-                lines.append(tabulate(notes["providers"], headers="keys", tablefmt="github", showindex=False))
 
     out = OUT_DIR / "llm_calidad.md"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")

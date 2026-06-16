@@ -1,8 +1,4 @@
-"""Benchmark ElevenLabs Multilingual v2.
-
-Voz por defecto: Rachel (multilingual). Cambiar VOICE_ID si querés otra.
-Precios: https://elevenlabs.io/pricing
-"""
+"""ElevenLabs Multilingual v2 (voz por defecto: Rachel)."""
 from __future__ import annotations
 
 import os
@@ -14,13 +10,16 @@ from elevenlabs.client import ElevenLabs
 
 from common.audio_samples import TTS_TEXTS
 from common.base import Benchmark, BenchmarkResult
+from common.benchmark_errors import mark_tts_output
 from common.metrics import elapsed_ms, estimate_tts_cost_usd
 
 
 load_dotenv()
 
 # Tier "Creator": 0.30 USD por 1000 chars ~ 300 USD/M chars (verificar precio actual).
-RATE_PER_MILLION_CHARS = 300.0
+from common.rates import ELEVENLABS_USD_PER_M_CHARS
+
+RATE_PER_MILLION_CHARS = ELEVENLABS_USD_PER_M_CHARS
 VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Rachel (multilingual)
 
 OUTPUT_DIR = Path(__file__).resolve().parent.parent.parent / "results" / "tts_outputs"
@@ -58,7 +57,7 @@ class ElevenLabsBenchmark(Benchmark):
 
         cost = estimate_tts_cost_usd(len(text), RATE_PER_MILLION_CHARS)
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -73,6 +72,7 @@ class ElevenLabsBenchmark(Benchmark):
             cost_usd=cost,
             output_preview=str(out_file.name),
         )
+        return mark_tts_output(result, out_file)
 
 
 if __name__ == "__main__":

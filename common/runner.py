@@ -1,4 +1,4 @@
-"""Utilidades compartidas para runners de benchmarks."""
+"""Orquesta los run_all de LLM, STT y TTS (varios proveedores por categoría)."""
 from __future__ import annotations
 
 import traceback
@@ -11,9 +11,11 @@ T = TypeVar("T")
 
 
 def safe_factory(name: str, factory: Callable[[], Benchmark]) -> Benchmark | None:
+    """Instancia el benchmark; devuelve None si falla import, key o binario."""
     try:
         return factory()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
+        # Sin API key, import roto o binario ausente: se omite el proveedor
         print(f"[WARN] {name} no disponible: {exc}")
         return None
 
@@ -27,6 +29,7 @@ def run_category_benchmarks(
     input_label: str,
     log_prefix: str = ">>",
 ) -> int:
+    """Ejecuta cada proveedor de la categoría y escribe results/."""
     inputs = list(test_inputs)
     if not inputs:
         print(f"[WARN] Sin inputs para {category.upper()}")

@@ -1,4 +1,8 @@
-# Guía: 5 audios de voz humana (opcional si usás FLEURS)
+# Guía: audios de voz humana
+
+Los **14 `.wav` del benchmark ya están en el repositorio** (`data/test_audio/`).
+Los comandos siguientes sirven para **regenerar** clips equivalentes o ampliar el
+catálogo; si cambiás un archivo, ejecutá `python scripts/hash_stt_audio.py --write`.
 
 **Recomendado (sin grabar):**
 
@@ -6,10 +10,49 @@
 python scripts/download_common_voice_samples.py
 ```
 
-Eso descarga `g1_fleurs.wav` … `g5_fleurs.wav` desde Google FLEURS (`es_419`).
+Eso descarga `g1_fleurs.wav`, `g2_fleurs.wav` y `g4_fleurs.wav` desde Google FLEURS (`es_419`).
 
-**Alternativa manual:** grabá estos archivos con el texto exacto de
+**Common Voice con ruido / validación débil (robustez):**
+
+```powershell
+python scripts/download_common_voice_noisy.py
+```
+
+Descarga `c1_cv_noisy.wav` y `c3_cv_noisy.wav` desde Common Voice 23.0 (es, espejo HF).
+Filtra por **SNR estimado bajo** (ruido de fondo audible), no solo votos negativos.
+Corpus oficial completo: [Mozilla Data Collective](https://datacollective.mozillafoundation.org/) (registro).
+
+**Audios largos (30–45 s)** — turnos que no existen como frase única en CV/FLEURS:
+
+```powershell
+python scripts/download_long_stt_samples.py
+```
+
+Genera `l1_fleurs_largo` (concatena g2+g4; el clip actual en disco puede ser legacy
+g2+g4+g3), `l2_piper_largo` (~44 s) y `l4_noisy_largo` (ruido rosa sobre l1).
+Opcional: `l3_cv_largo` si el scan encuentra un clip CV limpio ≥18 s (poco frecuente).
+
+**Acento centroamericano (proxy CR)** — Common Voice no etiqueta «Costa Rica» de forma
+aislada; usa el bucket **América central**:
+
+```powershell
+python scripts/download_cv_centroamerica_samples.py
+```
+
+Genera `r1_cv_centroamerica.wav` (~11 s) y `r2_cv_centroamerica_largo.wav` (~32 s).
+
+**Alternativa manual:** grabá los archivos con el texto exacto de
 `reference_transcriptions.json` (`source: human_recorded`).
+
+## Catálogo activo (14 audios)
+
+| Prefijo | Cantidad | Origen |
+|---------|----------|--------|
+| `a*` | 4 | Piper sintético (`generate_stt_audio_piper.py`) |
+| `g*` | 3 | FLEURS voz humana (g1, g2, g4) |
+| `c*` | 2 | CV ruidoso (c1, c3) |
+| `l*` | 3 | Largos (l1, l2, l4; l3 opcional) |
+| `r*` | 2 | CV América central |
 
 ## Formato
 
@@ -17,27 +60,11 @@ Eso descarga `g1_fleurs.wav` … `g5_fleurs.wav` desde Google FLEURS (`es_419`).
 - Ambiente silencioso, micrófono estable
 - Leé natural, como si hablaras con el agente (interacción), sin corregirte en voz alta
 
-## Guion (leer tal cual)
-
-1. **g1_interaccion_saludo.wav**  
-   Hola Max, ¿me ayudás con una rutina corta de calentamiento antes de entrenar?
-
-2. **g2_interaccion_cambio_agente.wav**  
-   Quiero cambiar al agente de entretenimiento y que me expliques qué expresiones tiene disponibles.
-
-3. **g3_interaccion_limites_gpu.wav**  
-   Si mi tarjeta gráfica aguanta cincuenta mil triángulos, ¿puedo mostrar al mismo tiempo el gimnasio y el educativo?
-
-4. **g4_interaccion_json_voz.wav**  
-   Dictame en voz alta un resumen de tres puntos sobre latencia, costo y privacidad del pipeline del agente.
-
-5. **g5_interaccion_cierre_cr.wav**  
-   Diay mae, gracias por la sesión. Apaguemos el agente y guardemos la configuración para la próxima clase.
-
-## Después de grabar
+## Después de generar o grabar
 
 ```powershell
 python -m benchmarks.stt.run_all 5
 ```
 
-Los benchmarks usan todos los `.wav` que existan; los `g*` se suman a los `a*` (Piper).
+Los benchmarks usan todos los `.wav` declarados en `reference_transcriptions.json` que
+existan en esta carpeta.

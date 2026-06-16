@@ -1,8 +1,4 @@
-"""Benchmark Groq con Llama 3.3 70B.
-
-Groq es API gratuita y conocida por TTFT extremadamente bajos (decenas de ms).
-Precios: https://groq.com/pricing
-"""
+"""Groq API con Llama 3.3 70B."""
 from __future__ import annotations
 
 import os
@@ -12,6 +8,7 @@ from dotenv import load_dotenv
 from groq import Groq
 
 from common.base import Benchmark, BenchmarkResult, llm_output_fields
+from common.benchmark_errors import mark_empty_llm
 from common.metrics import elapsed_ms, estimate_llm_cost_usd
 from common.prompts import LLM_PROMPTS, PromptSpec
 
@@ -19,8 +16,13 @@ from common.prompts import LLM_PROMPTS, PromptSpec
 load_dotenv()
 
 # Rate público de Llama 3.3 70B Versatile en Groq.
-INPUT_RATE_PER_MILLION = 0.59
-OUTPUT_RATE_PER_MILLION = 0.79
+from common.rates import (
+    GROQ_LLAMA33_INPUT_PER_M,
+    GROQ_LLAMA33_OUTPUT_PER_M,
+)
+
+INPUT_RATE_PER_MILLION = GROQ_LLAMA33_INPUT_PER_M
+OUTPUT_RATE_PER_MILLION = GROQ_LLAMA33_OUTPUT_PER_M
 
 
 class GroqBenchmark(Benchmark):
@@ -53,7 +55,9 @@ class GroqBenchmark(Benchmark):
                 if ttft_ms is None:
                     ttft_ms = elapsed_ms(start)
                 output_chunks.append(chunk.choices[0].delta.content)
-            if getattr(chunk, "x_groq", None) and getattr(chunk.x_groq, "usage", None):
+            if getattr(chunk, "usage", None):
+                usage = chunk.usage
+            elif getattr(chunk, "x_groq", None) and getattr(chunk.x_groq, "usage", None):
                 usage = chunk.x_groq.usage
 
         total_ms = elapsed_ms(start)
@@ -61,6 +65,9 @@ class GroqBenchmark(Benchmark):
 
         input_tokens = getattr(usage, "prompt_tokens", 0) if usage else 0
         output_tokens = getattr(usage, "completion_tokens", 0) if usage else 0
+        notes = ""
+        if (input_tokens == 0 and output_tokens == 0) and output:
+            notes = "usage_no_reportado_en_stream"
         cost = estimate_llm_cost_usd(
             input_tokens,
             output_tokens,
@@ -68,13 +75,14 @@ class GroqBenchmark(Benchmark):
             OUTPUT_RATE_PER_MILLION,
         )
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
             deployment=self.deployment,
             test_id=test_input["id"],
             run_id=run_id,
+            notes=notes,
             latency_ms=total_ms,
             ttft_ms=ttft_ms,
             input_size=input_tokens,
@@ -84,6 +92,7 @@ class GroqBenchmark(Benchmark):
             cost_usd=cost,
             **llm_output_fields(output),
         )
+        return mark_empty_llm(result, output)
 
 
 if __name__ == "__main__":

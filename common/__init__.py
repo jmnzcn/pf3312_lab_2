@@ -1,1 +1,1 @@
-"""Módulos comunes compartidos por todos los benchmarks."""
+"""Código compartido entre benchmarks."""

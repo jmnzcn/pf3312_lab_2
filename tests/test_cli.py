@@ -29,12 +29,9 @@ class _FakeBench(Benchmark):
 
 
 def test_run_benchmark_main_writes_raw_with_output_text(tmp_path, monkeypatch):
-    monkeypatch.setattr(rc, "MANIFEST_PATH", tmp_path / "run_manifest.json")
+    monkeypatch.setenv("BENCHMARK_RESULTS_DIR", str(tmp_path))
     monkeypatch.setattr(rc, "_current_batch_id", None)
-    results_dir = tmp_path / "results"
-    raw_dir = results_dir / "raw"
-    monkeypatch.setattr("common.results.RESULTS_DIR", results_dir)
-    monkeypatch.setattr("common.results.RAW_DIR", raw_dir)
+    raw_dir = tmp_path / "raw"
 
     run_benchmark_main(
         category="llm",

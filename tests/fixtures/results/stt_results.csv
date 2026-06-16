@@ -1,0 +1,2 @@
+timestamp,run_batch_id,category,provider,model,deployment,test_id,run_id,latency_ms,ttft_ms,input_size,output_size,input_unit,output_unit,cost_usd,quality_metric,quality_metric_name,output_preview,notes,error
+2026-01-01T00:00:00Z,2026-01-01T00:00:00Z,stt,deepgram,nova-3,cloud,a1_saludo_corto,1,800.0,,300,50,seconds_x100,chars,0.0005,0.05,WER,hola mundo,,

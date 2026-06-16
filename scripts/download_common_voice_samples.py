@@ -1,17 +1,4 @@
-"""Descarga 5 clips de voz humana en español para el benchmark STT.
-
-Mozilla Common Voice ya no publica archivos en Hugging Face (solo en Mozilla Data
-Collective con registro). Este script usa **Google FLEURS** (`es_419`): voz humana
-leída, transcripción verificada, licencia CC BY 4.0.
-
-Guarda WAV 16 kHz mono en data/test_audio/ y actualiza las entradas g* en
-reference_transcriptions.json.
-
-Uso:
-    pip install datasets
-    python scripts/download_common_voice_samples.py
-    python scripts/download_common_voice_samples.py --force
-"""
+"""Descarga 3 clips FLEURS (g1, g2, g4) para STT y actualiza reference_transcriptions.json."""
 from __future__ import annotations
 
 import argparse
@@ -32,12 +19,12 @@ OUTPUT_DIR = PROJECT_ROOT / "data" / "test_audio"
 TARGET_SR = 16_000
 
 DURATION_BUCKETS: list[tuple[str, float, float]] = [
-    ("corto_1", 2.5, 6.0),
-    ("corto_2", 6.0, 10.0),
-    ("medio_1", 10.0, 15.0),
-    ("medio_2", 15.0, 22.0),
-    ("corto_3", 3.0, 8.0),
+    ("corto", 2.5, 6.0),
+    ("medio", 10.0, 15.0),
+    ("largo", 15.0, 22.0),
 ]
+# IDs del catálogo activo (no secuencial: sin g3).
+FLEURS_SLOT_IDS = (1, 2, 4)
 
 MAX_SCAN = 6_000
 HUMAN_SOURCES = {"human_recorded", "common_voice_human", "fleurs_human"}
@@ -78,7 +65,7 @@ def _save_wav(path: Path, array: np.ndarray, sr: int) -> None:
 
 def _load_dataset_stream():
     try:
-        import datasets  # noqa: F401
+        import datasets  # solo para verificar que el paquete está instalado
     except ImportError as exc:
         raise SystemExit(
             "Falta el paquete 'datasets'. Instalá con:\n"
@@ -124,7 +111,7 @@ def _download_clips(force: bool) -> list[PickedClip]:
             if filled[bucket_name] or not (lo <= duration < hi):
                 continue
 
-            slot = len(picked) + 1
+            slot = FLEURS_SLOT_IDS[len(picked)]
             file_name = f"g{slot}_fleurs.wav"
             out = OUTPUT_DIR / file_name
             _save_wav(out, array, sr)
@@ -140,7 +127,7 @@ def _download_clips(force: bool) -> list[PickedClip]:
             )
             picked.append(clip)
             filled[bucket_name] = True
-            print(f"  [{slot}/5] {bucket_name} ({duration:.1f}s) -> {file_name}")
+            print(f"  [{len(picked)}/{len(FLEURS_SLOT_IDS)}] {bucket_name} ({duration:.1f}s) -> {file_name}")
             print(f"       {sentence[:90]}{'...' if len(sentence) > 90 else ''}")
             break
 
@@ -183,17 +170,17 @@ def _update_catalog(clips: list[PickedClip]) -> None:
         )
 
     data["samples"] = samples
-    data["_doc"] = (
-        "Catálogo STT. synthetic_piper: scripts/generate_stt_audio_piper.py. "
-        "fleurs_human: scripts/download_common_voice_samples.py (FLEURS es_419)."
-    )
+    sys.path.insert(0, str(PROJECT_ROOT))
+    from common.audio_samples import CATALOG_DOC
+
+    data["_doc"] = CATALOG_DOC
     REFERENCE_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"OK catálogo: {REFERENCE_FILE.relative_to(PROJECT_ROOT)}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Descargar 5 clips de voz humana en español (FLEURS es_419)."
+        description="Descargar 3 clips FLEURS (g1, g2, g4) en español latinoamericano."
     )
     parser.add_argument("--force", action="store_true", help="Reemplazar g*_fleurs.wav existentes.")
     args = parser.parse_args()

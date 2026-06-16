@@ -2,12 +2,12 @@
   "platform": "Windows-11-10.0.26200-SP0",
   "cpu_count": 12,
   "ram_total_gb": 31.73,
-  "ram_available_gb": 9.0,
+  "ram_available_gb": 6.8,
   "gpus": [
     {
       "name": "Quadro P2000",
       "vram_total_mb": 4096.0,
-      "vram_used_mb": 865.0,
+      "vram_used_mb": 495.0,
       "driver": "573.96"
     }
   ],

@@ -1,0 +1,3 @@
+timestamp,run_batch_id,category,provider,model,deployment,test_id,run_id,latency_ms,ttft_ms,input_size,output_size,input_unit,output_unit,cost_usd,quality_metric,quality_metric_name,output_preview,notes,error
+2026-01-01T00:00:00Z,2026-01-01T00:00:00Z,llm,openai,gpt-4o,cloud,p1_factual_corto,1,1000.0,200.0,10,20,tokens,tokens,0.001,,,hola,,
+2026-01-01T00:00:01Z,2026-01-01T00:00:00Z,llm,groq,llama-3.3-70b-versatile,cloud,p1_factual_corto,1,500.0,100.0,10,20,tokens,tokens,0.0001,,,hola,,

@@ -1,4 +1,4 @@
-"""Benchmark OpenAI Whisper API (whisper-1)."""
+"""STT con API Whisper (modelo whisper-1)."""
 from __future__ import annotations
 
 import os
@@ -8,13 +8,16 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from common.audio_samples import AudioSample, load_audio_samples
-from common.base import Benchmark, BenchmarkResult
+from common.base import Benchmark, BenchmarkResult, stt_output_fields
+from common.benchmark_errors import mark_empty_stt
 from common.metrics import compute_wer, elapsed_ms, estimate_stt_cost_usd
 
 
 load_dotenv()
 
-RATE_PER_MINUTE = 0.006  # USD/min (whisper-1)
+from common.rates import OPENAI_WHISPER_USD_PER_MIN
+
+RATE_PER_MINUTE = OPENAI_WHISPER_USD_PER_MIN
 
 
 class OpenAIWhisperBenchmark(Benchmark):
@@ -48,7 +51,7 @@ class OpenAIWhisperBenchmark(Benchmark):
         wer = compute_wer(test_input.reference_text, text)
         cost = estimate_stt_cost_usd(duration, RATE_PER_MINUTE)
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -63,8 +66,9 @@ class OpenAIWhisperBenchmark(Benchmark):
             cost_usd=cost,
             quality_metric=wer,
             quality_metric_name="WER",
-            output_preview=text[:200],
+            **stt_output_fields(text),
         )
+        return mark_empty_stt(result, text)
 
 
 if __name__ == "__main__":

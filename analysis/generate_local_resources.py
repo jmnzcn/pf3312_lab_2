@@ -1,4 +1,4 @@
-"""Genera tabla de recursos locales (dimensión 3 — escalabilidad)."""
+"""Tabla de RAM/CPU/GPU para modelos locales (dimensión 3)."""
 from __future__ import annotations
 
 import json
@@ -6,11 +6,13 @@ from pathlib import Path
 
 from tabulate import tabulate
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = PROJECT_ROOT / "docs" / "dimensiones_generadas"
-SNAP = PROJECT_ROOT / "results" / "hardware_snapshot.json"
+from common.paths import docs_dir, project_root, results_dir
 
-# TDP típico (W) para estimar energía — dimensión 3 escalabilidad local
+PROJECT_ROOT = project_root()
+OUT_DIR = docs_dir() / "dimensiones_datos"
+SNAP = results_dir() / "hardware_snapshot.json"
+
+# TDP de referencia (W) para estimar consumo en dimensión 3
 GPU_TDP_W: dict[str, float] = {
     "Quadro P2000": 75.0,
     "NVIDIA Quadro P2000": 75.0,
@@ -19,7 +21,7 @@ GPU_TDP_W: dict[str, float] = {
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    lines = ["# Recursos locales — escalabilidad (dimensión 3)", ""]
+    lines = ["# Recursos locales: escalabilidad (dimensión 3)", ""]
     if not SNAP.exists():
         lines.append("*Ejecutar `python scripts/capture_hardware.py` tras la corrida.*")
     else:
@@ -48,7 +50,7 @@ def main() -> None:
                 f"\n**Energía (estimada):** TDP referencia GPU ~{tdp:.0f} W "
                 f"({g0['name']}). En inferencia local sostenida (faster-whisper/Ollama) "
                 f"el consumo del sistema se acerca a carga GPU+CPU; no se midió wattímetro "
-                f"en esta corrida — valor indicativo para comparar nube ($/llamada) vs. "
+                f"en esta corrida; valor indicativo para comparar nube ($/llamada) vs. "
                 f"estación de trabajo."
             )
         models = snap.get("local_models") or {}
@@ -57,7 +59,7 @@ def main() -> None:
             rows = [{"componente": k, "modelo": v} for k, v in models.items()]
             lines.append(tabulate(rows, headers="keys", tablefmt="github", showindex=False))
         lines.append(
-            "\n*Costo API de modelos locales: $0. Trade-off: latencia mayor y "
+            "\n*Costo API de modelos locales: $0. A cambio: latencia mayor y "
             "consumo de VRAM/RAM en esta estación de trabajo.*"
         )
     out = OUT_DIR / "recursos_locales.md"

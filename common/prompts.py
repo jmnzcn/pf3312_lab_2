@@ -1,15 +1,4 @@
-"""Prompts estandarizados de prueba para benchmarking de LLMs.
-
-Cinco prompts en español que cubren niveles distintos de complejidad:
-    1. Pregunta factual corta (latencia base, costo mínimo).
-    2. Razonamiento multi-paso (capacidad de cadena lógica).
-    3. Seguimiento de instrucciones con formato estricto (JSON).
-    4. Comprensión de contexto largo (resumen de un texto extenso).
-    5. Generación creativa / role-play (calidad subjetiva).
-
-Estos prompts también se usan como entrada para los benchmarks de TTS,
-y sus respuestas de referencia para STT cuando se sintetiza audio.
-"""
+"""Cinco prompts en español para benchmarks LLM (también usados en TTS/STT sintético)."""
 from __future__ import annotations
 
 from typing import TypedDict
@@ -36,12 +25,12 @@ LLM_PROMPTS: list[PromptSpec] = [
         "id": "p2_razonamiento",
         "title": "Razonamiento multi-paso",
         "content": (
-            "Un agente virtual tiene tres modelos: Max (gimnasio, 28 mil triángulos), "
-            "Winston (entretenimiento, 31 mil triángulos) y Liam (educativo, 17 mil "
-            "triángulos). Si la GPU del usuario soporta como máximo 50 mil triángulos "
-            "simultáneos en pantalla, indique paso a paso qué combinaciones de modelos "
-            "se pueden mostrar a la vez sin pasarse del límite, y cuál combinación "
-            "ofrece la mayor variedad estética sin exceder dicho presupuesto."
+            "Un sistema de agentes virtuales ofrece tres avatares 3D: Alfa (28 mil "
+            "triángulos), Beta (31 mil triángulos) y Gamma (17 mil triángulos). Si la "
+            "GPU del cliente soporta como máximo 50 mil triángulos simultáneos en "
+            "pantalla, indique paso a paso qué combinaciones se pueden mostrar a la "
+            "vez sin exceder el límite, y cuál combinación ofrece la mayor variedad "
+            "visual sin pasarse del presupuesto."
         ),
         "expected_tokens": 250,
     },
@@ -62,18 +51,12 @@ LLM_PROMPTS: list[PromptSpec] = [
         "content": (
             "A continuación encontrará un fragmento técnico. Resúmalo en máximo "
             "60 palabras, conservando los tres puntos principales:\n\n"
-            "Texto: El benchmarking sistemático de servicios cognitivos para agentes "
-            "virtuales contempla al menos seis dimensiones interdependientes: la "
-            "latencia empírica, donde se distingue el tiempo al primer token de la "
-            "latencia total de respuesta; la precisión, medida con métricas como "
-            "Word Error Rate para reconocimiento de voz o coherencia subjetiva para "
-            "modelos generativos; el costo a escala, expresado en dólares por millón "
-            "de tokens, por minuto de audio transcrito o por caracteres sintetizados; "
-            "la privacidad y gobernanza de los datos, que considera si los proveedores "
-            "utilizan las entradas para reentrenar sus modelos comerciales; la "
-            "customización, que incluye la inyección de system prompts y la "
-            "clonación de voz; y finalmente la facilidad de integración con "
-            "ecosistemas como Unity o aplicaciones C# y Python."
+            "Texto: En el diseño del tutor de voz del laboratorio se plantearon tres "
+            "metas: que la respuesta en nube llegue en menos de dos segundos, que no se "
+            "guarde audio sin un consentimiento explícito del usuario, y que se pueda "
+            "cambiar la voz del avatar sin recompilar la aplicación Unity. También se "
+            "propuso estimar el costo por clase de quince minutos y revisar el error de "
+            "transcripción con grabaciones de sala, no solo con audios sintéticos de Piper."
         ),
         "expected_tokens": 200,
     },
@@ -81,10 +64,10 @@ LLM_PROMPTS: list[PromptSpec] = [
         "id": "p5_creativo",
         "title": "Generación creativa / role-play",
         "content": (
-            "Usted es Max, un acompañante virtual de bienestar físico atlético. "
-            "Salude al usuario en máximo cuatro oraciones, ofrezca una rutina corta "
-            "de calentamiento de tres ejercicios, y termine con una frase "
-            "motivadora. Use un tono cercano pero profesional."
+            "Usted es un coach virtual de bienestar físico. Salude al usuario en "
+            "máximo cuatro oraciones, ofrezca una rutina corta de calentamiento de "
+            "tres ejercicios, y termine con una frase motivadora. Use un tono cercano "
+            "pero profesional."
         ),
         "expected_tokens": 180,
     },

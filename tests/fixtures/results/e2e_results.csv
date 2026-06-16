@@ -1,0 +1,6 @@
+timestamp,run_batch_id,escenario,stt_provider,llm_provider,tts_provider,test_id,run_id,stt_latency_ms,llm_latency_ms,llm_ttft_ms,tts_latency_ms,total_latency_ms,overhead_ms,stt_cost_usd,llm_cost_usd,tts_cost_usd,total_cost_usd,transcript_preview,llm_response_preview,notes,error
+2026-01-01T00:00:00Z,2026-01-01T00:00:00Z,Demo rápida nube,deepgram,groq,google,a1_saludo_corto,1,100,200,50,150,500,50,0.001,0.002,0.003,0.006,hola,respuesta,,
+2026-01-01T00:00:01Z,2026-01-01T00:00:00Z,Demo rápida nube,deepgram,groq,google,a2_oracion_media,1,110,210,55,160,535,55,0.001,0.002,0.003,0.006,oracion,respuesta,,
+2026-01-01T00:00:02Z,2026-01-01T00:00:00Z,Demo rápida nube,deepgram,groq,google,g1_fleurs,1,120,220,60,170,570,60,0.001,0.002,0.003,0.006,fleurs,respuesta,,
+2026-01-01T00:00:03Z,2026-01-01T00:00:00Z,Demo rápida nube,deepgram,groq,google,c1_cv_noisy,1,130,230,65,180,605,65,0.001,0.002,0.003,0.006,ruido,respuesta,,
+2026-01-01T00:00:04Z,2026-01-01T00:00:00Z,Demo rápida nube,deepgram,groq,google,l1_fleurs_largo,1,140,240,70,190,640,70,0.001,0.002,0.003,0.006,largo,respuesta,,

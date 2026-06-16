@@ -1,22 +1,4 @@
-"""Benchmark TTS local con Piper.
-
-Piper es open source, corre 100% offline, no necesita GPU. Modelo recomendado
-en español: es_ES-davefx-medium (o cualquier .onnx de https://huggingface.co/rhasspy/piper-voices).
-
-En Windows:
-    1. Descargar el binario de Piper desde https://github.com/rhasspy/piper/releases
-       (por ejemplo piper_windows_amd64.zip), descomprimir y poner piper.exe en
-       PATH o en una ubicación accesible.
-    2. Descargar el modelo es_ES-davefx-medium.onnx + .json desde
-       https://huggingface.co/rhasspy/piper-voices/tree/main/es/es_ES/davefx
-    3. Colocar los archivos en models/piper/ y apuntar PIPER_MODEL_PATH al .onnx.
-
-En Linux/macOS:
-    pip install piper-tts (el script usa subprocess para mantenerlo simple).
-
-Si Piper no está disponible, podés sustituirlo por otro TTS local (Coqui XTTS,
-Tortoise, OuteTTS, etc.) reutilizando el mismo patrón.
-"""
+"""Benchmark TTS local con Piper (offline, sin GPU). Ver models/piper/."""
 from __future__ import annotations
 
 import os
@@ -29,6 +11,7 @@ from dotenv import load_dotenv
 
 from common.audio_samples import TTS_TEXTS
 from common.base import Benchmark, BenchmarkResult
+from common.benchmark_errors import mark_tts_output, provider_error
 from common.metrics import elapsed_ms
 
 
@@ -63,7 +46,7 @@ class PiperBenchmark(Benchmark):
                 f"Binario piper no encontrado: {self.piper_bin}. "
                 "Instalá Piper en tools/piper/ o definí PIPER_BIN en .env."
             )
-        # Piper necesita espeak-ng-data junto al ejecutable; cwd = carpeta del .exe.
+        # Piper busca espeak-ng-data en el directorio del ejecutable
         self.piper_cwd = Path(os.getenv("PIPER_CWD", Path(self.piper_bin).parent))
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -88,9 +71,12 @@ class PiperBenchmark(Benchmark):
         )
         total_ms = elapsed_ms(start)
         if proc.returncode != 0:
-            raise RuntimeError(f"Piper falló: {proc.stderr.strip()[:200]}")
+            stderr = proc.stderr.strip()[:200]
+            raise RuntimeError(
+                provider_error("piper", f"exit={proc.returncode} · stderr={stderr}", stage="tts")
+            )
 
-        return BenchmarkResult(
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
@@ -105,6 +91,7 @@ class PiperBenchmark(Benchmark):
             cost_usd=0.0,
             output_preview=str(out_file.name),
         )
+        return mark_tts_output(result, out_file)
 
 
 if __name__ == "__main__":

@@ -1,1 +1,1 @@
-"""Scripts de análisis y tablas para el informe PF-3312."""
+"""Agregación de resultados del benchmark (tablas y gráficos)."""

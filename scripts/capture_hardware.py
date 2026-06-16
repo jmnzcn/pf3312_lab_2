@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from common.run_context import MANIFEST_PATH, load_manifest
+from common.paths import manifest_path
 
 
 def _gpu_info() -> list[dict]:
@@ -69,7 +69,8 @@ def main() -> None:
     manifest = load_manifest()
     if manifest:
         manifest["hardware"] = snap
-        MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+        path = manifest_path()
+        path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"OK {out.relative_to(ROOT)}")
 
 

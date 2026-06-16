@@ -1,13 +1,4 @@
-"""Benchmark STT local con faster-whisper.
-
-Requisitos:
-    - GPU NVIDIA con CUDA (opcional pero muy recomendado).
-    - El primer run descarga el modelo desde HuggingFace y lo cachea.
-
-Tip 4 GB VRAM:
-    - large-v3 con compute_type=int8_float16 → cabe ajustado (~3 GB).
-    - Si se queda sin memoria, bajar a medium o usar compute_type=int8.
-"""
+"""STT local con faster-whisper; CUDA acelera pero no es obligatorio."""
 from __future__ import annotations
 
 import os
@@ -17,7 +8,8 @@ from dotenv import load_dotenv
 from faster_whisper import WhisperModel
 
 from common.audio_samples import AudioSample, load_audio_samples
-from common.base import Benchmark, BenchmarkResult
+from common.base import Benchmark, BenchmarkResult, stt_output_fields
+from common.benchmark_errors import mark_empty_stt
 from common.metrics import compute_wer, elapsed_ms
 
 
@@ -59,14 +51,18 @@ class FasterWhisperBenchmark(Benchmark):
 
         wer = compute_wer(test_input.reference_text, text)
 
-        return BenchmarkResult(
+        detail = (
+            f"device={self.device} · lang={getattr(info, 'language', '?')} "
+            f"prob={getattr(info, 'language_probability', 0):.2f}"
+        )
+        result = BenchmarkResult(
             category=self.category,
             provider=self.provider,
             model=self.model,
             deployment=self.deployment,
             test_id=test_input.id,
             run_id=run_id,
-            notes=f"device={self.device}",
+            notes=detail,
             latency_ms=total_ms,
             input_size=int(duration * 100),
             output_size=len(text),
@@ -75,8 +71,9 @@ class FasterWhisperBenchmark(Benchmark):
             cost_usd=0.0,
             quality_metric=wer,
             quality_metric_name="WER",
-            output_preview=text[:200],
+            **stt_output_fields(text),
         )
+        return mark_empty_stt(result, text, detail=detail)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""Identificador de corrida (batch) compartido entre runners y CSV."""
+"""run_batch_id compartido entre runners y CSV."""
 from __future__ import annotations
 
 import json
@@ -8,8 +8,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-MANIFEST_PATH = PROJECT_ROOT / "results" / "run_manifest.json"
+from common.paths import manifest_path, project_root
+
+PROJECT_ROOT = project_root()
 
 _current_batch_id: str | None = None
 
@@ -28,39 +29,49 @@ def start_run_batch(*, runs_per_input: int = 5, note: str = "", force: bool = Fa
         "platform": platform.platform(),
         "note": note,
     }
-    MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    try:
+        from common.audio_samples import catalog_fingerprint, load_catalog_data
+
+        manifest["catalog_fingerprint"] = catalog_fingerprint()
+        manifest["stt_sample_count"] = len(load_catalog_data().get("samples", []))
+    except Exception:
+        pass
+    path = manifest_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     return _current_batch_id
 
 
 def ensure_run_batch(*, runs_per_input: int = 5, note: str = "") -> str:
     """Reutiliza el batch activo o crea uno nuevo (pipeline run_all + sub-runners)."""
     global _current_batch_id
+    path = manifest_path()
     existing = current_batch_id()
     if existing:
         _current_batch_id = existing
-        if MANIFEST_PATH.exists():
+        if path.exists():
             manifest = load_manifest()
             if note:
                 manifest["note"] = note
-            manifest["runs_per_input"] = runs_per_input
-            MANIFEST_PATH.write_text(
-                json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
+            if "e2e" not in note.lower():
+                manifest["runs_per_input"] = runs_per_input
+            path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
         return existing
     return start_run_batch(runs_per_input=runs_per_input, note=note)
 
 
 def current_batch_id() -> str | None:
+    path = manifest_path()
     if _current_batch_id:
         return _current_batch_id
-    if MANIFEST_PATH.exists():
-        data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
         return data.get("run_batch_id")
     return None
 
 
 def load_manifest() -> dict[str, Any]:
-    if not MANIFEST_PATH.exists():
+    path = manifest_path()
+    if not path.exists():
         return {}
-    return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8"))
